@@ -3,6 +3,7 @@ var config = require('./config')
 var fs = require('fs');
 var r = require('rethinkdb');
 var schemaBuilder = require('./lib/rethink_schema_builder');
+var tests = require('./test/index');
 
 var USE_SESSIONS = false;
 
@@ -15,7 +16,7 @@ var USE_SESSIONS = false;
 var express = require('express');
 var app = module.exports.app = exports.app = express();
 app.models = {};
-app.connection = {};
+app.connection = null;
 
 var bodyParser = require('body-parser')
 var session = require('express-session')
@@ -35,20 +36,6 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 /*******************************************************************************
 
-                    PULL IN ROUTES AND MODELS
-
-*******************************************************************************/
-
-_.each(fs.readdirSync('./models'), function(file){
-    require('./models/' + file)(app);
-})
-
-_.each(fs.readdirSync('./routes'), function(file){
-    require('./routes/' + file)(app);
-})
-
-/*******************************************************************************
-
                     CONNECT TO RETHINK AND START SERVER
 
 *******************************************************************************/
@@ -59,18 +46,43 @@ r.connect(config.rethink, function(err, conn) {
         return;
     }
     app.connection = conn;
+
+    /***************************************************************************
+
+                        PULL IN ROUTES AND MODELS
+
+    ***************************************************************************/
+
+    _.each(fs.readdirSync('./models'), function(file){
+        var model = require('./models/' + file)(app);
+        app.models[model.name] = model;
+    })
+
+    _.each(fs.readdirSync('./routes'), function(file){
+        require('./routes/' + file)(app);
+    })
+
     schemaBuilder.buildFromModels({connection: conn,
                                    models: app.models,
                                    db: config.rethink.db}, function(err){
-
         if( err ){
             throw err;
-            return
+            return;
         }
-        var server = app.listen(config.port, function () {
-            var host = server.address().address
-            var port = server.address().port
-            console.log("Example app listening at http://%s:%s", host, port)
+
+        // run tests
+        tests(app, function(err){
+            if( err ){
+                throw err;
+                return;
+            }
+            console.log('TESTS PASSED!!!!');
+            // start server
+            var server = app.listen(config.port, function () {
+                var host = server.address().address;
+                var port = server.address().port;
+                console.log("Example app listening at http://%s:%s", host, port);
+            });
         });
     });
 });
