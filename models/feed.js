@@ -1,19 +1,74 @@
-var _ = require('underscore');
+/**
+    Fields:
+        - url
+        - active
+        - lastUpdate
+*/
+
 var BaseModel = require('../lib/rethink_base_model');
-var baseModel = new BaseModel;
+var debug = require('debug')('rss_monitor');
+
+var rssReadFeed = require('../lib/rss_read_feed');
 
 module.exports = function(app){
-    // extend base model (provides crud methods)
-    _.extend(this, baseModel);
+
+    model = new BaseModel(this, app, __filename);
 
     var models = app.models;
 
-    // props required by base model interface
-    this.name = 'feed';
-    this.connection = app.connection;
+    // set model defaults
+    model.defaults  = {url: '', active: false, lastUpdate: 0};
 
     // defines the rethink indexes
-    this.indexes = ['url', 'mostRecent'];
+    model.indexes = ['url', 'active'];
 
-    return this;
+    var feedMonitorInterval = app.settings.feedMonitorInterval;
+    var intervals = {};
+
+    model.activate = function(id, callbackIn){
+        this.get(id, function(err, feed){
+            if( err ){
+                callbackIn(err);
+                return;
+            }
+            model.update({id: id, active: true}, function(err){
+                if( err ){
+                    callbackIn(err);
+                } else {
+                    model.setInterval(feed);
+                    callbackIn();
+                }
+            });
+        });
+    }
+
+    model.clearInterval = function(id){
+        if( intervals[id] ){
+            clearInterval(intervals[id]);
+            delete intervals[id];
+        }
+    }
+
+
+    model.setInterval = function(feed){
+        rssReadFeed({url: feed.url}, function(err, feedData){
+            if( err ){
+                console.log(err);
+                return;
+            }
+            feedData.data.feedId = feed.id;
+            models.post.save(feedData.data, function(err){
+                if( err ){ debug('Error saving post', err); }
+            });
+
+// console.log(feed.id)
+// // console.log(feedData.data.guid)
+// var date = new Date(feedData.data.date);
+// console.log(date.getTime())
+// console.log(feedData.data.date);
+
+        });
+    }
+
+    return model;
 }

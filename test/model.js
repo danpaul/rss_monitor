@@ -2,8 +2,7 @@ var assert = require('assert');
 var async = require('async');
 
 // generic base model method test
-//  replace `MODEL_NAME` with a model that is actually being used
-var MODEL_NAME = 'feed';
+var MODEL_NAME = 'example';
 
 module.exports = function(app, callbackIn){
 
@@ -37,6 +36,9 @@ module.exports = function(app, callbackIn){
                 assert(newModel.foo === 'bar');
                 assert(newModel.baz === true);
                 assert(newModel.bat === 88);
+                // check default field
+                assert(newModel.defaultField === true);
+
                 callback();
             });
         },
@@ -70,6 +72,7 @@ module.exports = function(app, callbackIn){
                         return;
                     }
                     assert(newModel === null);
+                    callback();
                 });
             });
         },

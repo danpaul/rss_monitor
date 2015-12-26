@@ -15,8 +15,6 @@ if( config.environment === 'development' ){
     }
 } else if( config.environment === 'production' ) {
 
-
-
 } else {
     throw('App must be started with env flag set.')
 }
