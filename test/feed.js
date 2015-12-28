@@ -49,6 +49,7 @@ module.exports = function(app, callbackIn){
         },
         // wait
         function(callback){
+            // callback();
             setTimeout(callback, app.settings.feedMonitorInterval + 1000);
         },
         function(callback){
@@ -72,15 +73,7 @@ module.exports = function(app, callbackIn){
             });
         },
         // turn off feeds
-        // postModel.turnOffFeeds(function(err, posts){
-        //     if( err ){
-        //         callback(err);
-        //     } else {
-        //         callback();
-        //     }
-        // });
-
-
+        feedModel.turnOffFeeds
     ], callbackIn);
 
 }

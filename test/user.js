@@ -1,5 +1,6 @@
 var assert = require('assert');
 var async = require('async');
+var config = require('../config');
 
 // generic base model method test
 var MODEL_NAME = 'example';
@@ -12,6 +13,20 @@ module.exports = function(app, callbackIn){
     var userPosts;
     var testData = app.testData;
     var models = app.models;
+
+    var checkLogs = function(numberOfLogs, callback){
+        models.userPostLog.getLog({userId: user.id}, function(err, logs){
+                if( err ){
+                    callback(err);
+                    return;
+                }
+                assert(logs.length === numberOfLogs);
+                if( logs.length === 1 ){
+                    assert(logs[0] === userPosts[0]['id']);
+                }
+                callback();
+            });
+    }
 
     async.series([
         // create
@@ -69,16 +84,35 @@ module.exports = function(app, callbackIn){
         },
         // get log
         function(callback){
-            models.userPostLog.getLog({userId: user.id}, function(err, logs){
+            checkLogs(1, callback);
+        },
+        // test clear functionality only in development
+        function(callback){
+            if( !(config.environment === 'development') ){
+                callback();
+                return;
+            }
+            // clear everything before a minute ago
+            models.userPostLog.cleanLogs({maxAge: 1000 * 60 },
+                                         function(err){
+
                 if( err ){
                     callback(err);
                     return;
                 }
-                assert(logs.length === 1);
-                assert(logs[0]['postId'] === userPosts[0]['id']);
-                callback();
+                checkLogs(1, function(err){
+                    if( err ){
+                        callback(err);
+                        return;
+                    }
+                    // clear everything before now
+                    models.userPostLog.cleanLogs({maxAge: 0 },
+                                                 function(err){
+                        if( err ){ callback(err);
+                        } else { checkLogs(0, callback); }
+                    });
+                });
             });
-        }        
-
+        },
     ], callbackIn);
 }

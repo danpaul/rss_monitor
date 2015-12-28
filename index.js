@@ -56,6 +56,12 @@ r.connect(config.rethink, function(err, conn) {
         app.models[model.name] = model;
     })
 
+
+
+    // TODO: Initialize model monitors
+
+
+
     _.each(fs.readdirSync('./routes'), function(file){
         var routePath = '/' + file.replace(/\.[^/.]+$/, "") + '/';
         app.use(routePath, require('./routes/' + file)(app));

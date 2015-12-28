@@ -1,3 +1,5 @@
+var r = require('rethinkdb');
+
 /**
     Keep this as a tempalte and for testing(`../test/model.js`)
 
@@ -19,7 +21,7 @@ module.exports = function(app){
     model.defaults  = {defaultField: true}
 
     // defines the rethink indexes
-    model.indexes = ['mostRecent', {compound_index: ['field_one', 'field_two']}];
+    model.indexes = ['mostRecent', 'timestamp', {compound_index: ['field_one', 'field_two']}];
 
     return model;
 }

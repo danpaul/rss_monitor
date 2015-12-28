@@ -4,6 +4,7 @@
         - active
         - lastUpdate
 */
+var _ = require('underscore');
 var BaseModel = require('../lib/rethink_base_model');
 var debug = require('debug')('rss_monitor');
 
@@ -97,6 +98,14 @@ module.exports = function(app){
         intervals[feed.id] = setInterval(function(){
             self.readFeed(feed);
         }, feedMonitorInterval)
+    }
+
+    model.turnOffFeeds = function(callback){
+        var self = this;
+        _.each(intervals, function(v, k){
+            self.clearInterval(k);
+        });
+        callback();
     }
 
     model._normalizeUrl = function(url){
