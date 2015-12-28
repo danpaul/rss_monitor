@@ -7,7 +7,7 @@ var settings = {
 
 // env settings
 if( config.environment === 'development' ){
-    settings.feedMonitorInterval = 10000;
+    settings.feedMonitorInterval = 5000;
 } else if( config.environment === 'production' ) {
 
 }

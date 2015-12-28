@@ -12,3 +12,11 @@ Setup and start Rethink for your local system.
 Dev with Nodemon: NODE_ENV=development nodemon index.js
 Dev without Nodemon: NODE_ENV=development node index.js
 Prod: NODE_ENV=production node index.js
+
+## TODO
+
+* Review query in models.post.getFromFeeds
+* Turn on feed monitors on startup
+* Delete test monitors/feeds
+* Delete test users
+* add cron to clear old user logs

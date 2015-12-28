@@ -4,7 +4,6 @@
         - active
         - lastUpdate
 */
-
 var BaseModel = require('../lib/rethink_base_model');
 var debug = require('debug')('rss_monitor');
 
@@ -12,7 +11,8 @@ var rssReadFeed = require('../lib/rss_read_feed');
 
 module.exports = function(app){
 
-    model = new BaseModel(this, app, __filename);
+    // var parent;
+    var model = new BaseModel(this, app, __filename);
 
     var models = app.models;
 
@@ -35,10 +35,17 @@ module.exports = function(app){
                 if( err ){
                     callbackIn(err);
                 } else {
+                    model.readFeed(feed);
                     model.setInterval(feed);
                     callbackIn();
                 }
             });
+        });
+    }
+
+    model.turnOnFeeds = function(callback){
+        this.filter({row: 'active', value: true}, function(err, result){
+
         });
     }
 
@@ -49,8 +56,29 @@ module.exports = function(app){
         }
     }
 
+    /**
+        Required:
+            feedObject.url
+        Passes back new or existing object
+    */
+    model.createIfNew = function(feedObject, callback){
+        var self = this;
+        feedObject.url = this._normalizeUrl(feedObject.url);
+        this.filter({row: 'url', value: feedObject.url}, function(err, result){
+            if( err ){
+                callback(err);
+                return;
+            }
+            if( result.length > 0 ){
+                callback(null, result[0]);
+            } else {
+                self.create(feedObject, callback);
+            }
+        });
+    };
 
-    model.setInterval = function(feed){
+    model.readFeed = function(feed){
+        debug('reading feed', feed.id)
         rssReadFeed({url: feed.url}, function(err, feedData){
             if( err ){
                 console.log(err);
@@ -60,14 +88,23 @@ module.exports = function(app){
             models.post.save(feedData.data, function(err){
                 if( err ){ debug('Error saving post', err); }
             });
-
-// console.log(feed.id)
-// // console.log(feedData.data.guid)
-// var date = new Date(feedData.data.date);
-// console.log(date.getTime())
-// console.log(feedData.data.date);
-
         });
+    }
+
+
+    model.setInterval = function(feed){
+        var self = this;
+        intervals[feed.id] = setInterval(function(){
+            self.readFeed(feed);
+        }, feedMonitorInterval)
+    }
+
+    model._normalizeUrl = function(url){
+        var cleanUrl = url.trim();
+        if(cleanUrl.substr(-1) === '/') {
+            return cleanUrl.substr(0, cleanUrl.length - 1);
+        }
+        return cleanUrl;
     }
 
     return model;

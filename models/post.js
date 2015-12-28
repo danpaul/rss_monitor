@@ -1,7 +1,9 @@
 var BaseModel = require('../lib/rethink_base_model');
 var cache = require('memory-cache');
+var r = require('rethinkdb');
 
 var DEFAULT_CACHE_TIME = 1000 * 60 * 60 * 6; //6 hours
+var DEFAULT_SLICE_SIZE = 100;
 
 module.exports = function(app){
 
@@ -15,7 +17,8 @@ module.exports = function(app){
                      {feedId_timestamp: ['feedId', 'timestamp']}];
 
     model.settings = {
-        cacheTime: DEFAULT_CACHE_TIME
+        cacheTime: DEFAULT_CACHE_TIME,
+        sliceSize: DEFAULT_SLICE_SIZE
     };
 
     /**
@@ -54,6 +57,30 @@ module.exports = function(app){
                 });
             }
         });
+    }
+
+    /**
+        required: options.feedIds (array)
+        optional: options.page
+    */
+    model.getFromFeeds = function(options, callback){
+        var page = options.page ? options.page : 1;
+        var sliceStart = (page - 1) * this.settings.sliceSize;
+        var sliceEnd = page * this.settings.sliceSize - 1;
+
+        // Todo: improve this query
+        var query = r.table(this.name)
+                        .getAll(r.args(options.feedIds), {index: 'feedId'})
+                        .orderBy('timestamp');
+
+        if( !options.unlimit || options.unlimit !== true ){
+            query = query.slice(sliceStart, sliceEnd);
+        }
+
+        query.run(this.connection, function(err, result){
+            if( err ){ callback(err);
+            } else { callback(null, result); }
+        })
     }
     return model;
 }
