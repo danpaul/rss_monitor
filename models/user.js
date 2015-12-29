@@ -65,6 +65,7 @@ module.exports = function(app){
             options.feedId
     */
     model.addFeed = function(options, callback){
+        // Todo: confirm feed exists before adding it
         var self = this;
         this.get(options.userId, function(err, user){
             if( err ){

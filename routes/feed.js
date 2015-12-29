@@ -12,7 +12,7 @@ module.exports = function(app){
     // this route will be available at `/example/test`
     route.get('/test', function(req, res){ res.send('ok'); });
 
-    // add feed
+    // add feed and follow it
     route.post('/', function(req, res){
         if( !auth.check(req, res) ){ return; }
         var url = req.body.url || '';
@@ -29,9 +29,6 @@ module.exports = function(app){
             });
         });
     });
-
-    // follow existing feed
-
 
     return route;
 }

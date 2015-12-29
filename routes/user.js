@@ -25,7 +25,7 @@ module.exports = function(app){
         var self = this;
         if( !auth.check(req, res) ){ return; }
         models.user.getPublicUser(req.session.userId, function(err, resp){
-            if( err ){ return res.json(errors.serverError); }
+            if( err ){ return res.json(errors.server); }
             res.json(resp);
         })
     });
@@ -36,7 +36,7 @@ module.exports = function(app){
     route.post('/', function(req, res){
         var self = this;
         models.user.createNew(getDefaultFields(req), function(err, resp){
-            if( err ){ return res.json(errors.serverError); }
+            if( err ){ return res.json(errors.server); }
             return res.json(resp);
         });
     });
@@ -44,7 +44,7 @@ module.exports = function(app){
     route.post('/login', function(req, res){
         var self = this;
         models.user.login(getDefaultFields(req), function(err, resp){
-            if( err ){ return res.json(errors.serverError); }
+            if( err ){ return res.json(errors.server); }
             if( resp.status === 'success' ){
                 auth.login(req, resp.user.id);
             }
@@ -55,6 +55,35 @@ module.exports = function(app){
     route.post('/logout', function(req, res){
         auth.logout(req);
         res.json({status: 'success'});
+    });
+
+    route.post('/follow/:feedId', function(req, res){
+        if( !auth.check(req, res) ){ return; }
+        var userId = auth.getUserId(req);
+        models.user.addFeed({userId: userId, feedId: req.params.feedId},
+                            function(err){
+            if( err ){ return res.json(errors.server); }
+            return res.json({status: 'success'});
+        })
+    });
+
+    route.get('/feeds', function(req, res){
+        if( !auth.check(req, res) ){ return; }
+        var userId = auth.getUserId(req);
+        models.user.get(userId, function(err, user){
+            if( err ){ return res.json(errors.server); }
+            return res.json({status: 'success', feeds: user.feeds});
+        })
+    });
+
+    route.post('/remove-feed/:feedId', function(req, res){
+        if( !auth.check(req, res) ){ return; }
+        var userId = auth.getUserId(req);
+        models.user.removeFeed({userId: userId, feedId: req.params.feedId},
+                               function(err){
+            if( err ){ return res.json(errors.server); }
+            return res.json({status: 'success'});
+        })
     });
 
     return route;

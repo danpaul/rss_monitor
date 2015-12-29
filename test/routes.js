@@ -11,6 +11,8 @@ module.exports = function(app, callbackIn){
     var email = 'foo_' + Date.now() + '@email.com';
     var password = 'Asdfasdf';
     var user;
+    var feed;
+    var userFeeds;
 
     var cookieJar = request.jar();
 
@@ -76,24 +78,66 @@ module.exports = function(app, callbackIn){
 
                 if( err ){ callback(err);
                 } else {
+                    body = JSON.parse(body);
+                    assert(body.status === 'success');
                     setTimeout(callback, 1000);
                 }
             });
         },
 
-        // follow feed
-
         // get posts with page number
-        // function(callback){
-        //     request.get({uri: rootUrl + '/user', jar: cookieJar },
-        //                 function(err, httpResponse, body){
+        function(callback){
+            request.get({uri: rootUrl + '/post/user', jar: cookieJar },
+                        function(err, httpResponse, body){
 
-        //         if( err ){ callback(err);
-        //         } else {
-                    
-        //         }
-        //     });
-        // },
+                if( err ){ return callback(err); }
+                body = JSON.parse(body);
+                assert(body.status === 'success');
+                assert(body.posts.length > 0);
+                callback();
+            });
+        },
+
+        // log feed read...
+
+        // get feeds
+        function(callback){
+            request.get({uri: rootUrl + '/user/feeds', jar: cookieJar },
+                        function(err, httpResponse, body){
+
+                if( err ){ return callback(err); }
+                body = JSON.parse(body);
+                assert(body.status === 'success');
+                assert(body.feeds.length > 0);
+                userFeeds = body.feeds;
+                callback();
+            });
+        },
+
+        // remove feed
+        function(callback){
+            request.post({  uri: rootUrl + '/user/remove-feed/' + userFeeds[0],
+                            jar: cookieJar  },
+                         function(err, httpResponse, body){
+
+                if( err ){ return callback(err); }
+                body = JSON.parse(body);
+                assert(body.status === 'success');
+                callback();
+            });
+        },
+
+        function(callback){
+            request.get({uri: rootUrl + '/user/feeds', jar: cookieJar },
+                        function(err, httpResponse, body){
+
+                if( err ){ return callback(err); }
+                body = JSON.parse(body);
+                assert(body.status === 'success');
+                assert(body.feeds.length === 0);
+                callback();
+            });
+        },
 
         // logout user
         function(callback){

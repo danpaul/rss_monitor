@@ -23,3 +23,4 @@ Prod: NODE_ENV=production node index.js
 * check use of base.prototype.filter (may be non-indexed)
 * handle invalid feeds
 * implement feed._feedIsValid
+* confirm feed exists in user.addFeed
