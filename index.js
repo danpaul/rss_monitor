@@ -31,8 +31,10 @@ if( USE_SESSIONS ){
     var rDBStore = new RDBStore({ connectOptions: config.rethink });
     app.use(session({
         secret: config.sessionSecret,
-        resave: true,
-        saveUninitialized: true,
+        // resave: true,
+        resave: false,
+        //  saveUninitialized: true,
+        saveUninitialized: false,
         store: rDBStore
     }));
 }

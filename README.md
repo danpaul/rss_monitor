@@ -21,3 +21,5 @@ Prod: NODE_ENV=production node index.js
 * Delete test users
 * add cron to clear old user logs
 * check use of base.prototype.filter (may be non-indexed)
+* handle invalid feeds
+* implement feed._feedIsValid

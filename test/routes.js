@@ -3,6 +3,8 @@ var async = require('async');
 var request = require('request');
 request.defaults({jar: true});
 
+var TEST_FEED = 'http://rss.cnn.com/rss/cnn_topstories.rss';
+
 module.exports = function(app, callbackIn){
 
     var rootUrl = app.config.rootUrl;
@@ -62,6 +64,37 @@ module.exports = function(app, callbackIn){
                 }
             });
         },
+
+
+        // add feed
+        function(callback){
+
+            request.post({uri: rootUrl + '/feed',
+                         jar: cookieJar,
+                         form: {url: TEST_FEED}, },
+                        function(err, httpResponse, body){
+
+                if( err ){ callback(err);
+                } else {
+                    setTimeout(callback, 1000);
+                }
+            });
+        },
+
+        // follow feed
+
+        // get posts with page number
+        // function(callback){
+        //     request.get({uri: rootUrl + '/user', jar: cookieJar },
+        //                 function(err, httpResponse, body){
+
+        //         if( err ){ callback(err);
+        //         } else {
+                    
+        //         }
+        //     });
+        // },
+
         // logout user
         function(callback){
             request.post({uri: rootUrl + '/user/logout',
@@ -80,12 +113,10 @@ module.exports = function(app, callbackIn){
             request.get({uri: rootUrl + '/user', jar: cookieJar },
                         function(err, httpResponse, body){
 
-                if( err ){ callback(err);
-                } else {
-                    body = JSON.parse(body);
-                    assert(body.status === 'failure');
-                    callback();
-                }
+                if( err ){ return callback(err); }
+                body = JSON.parse(body);
+                assert(body.status === 'failure');
+                callback();
             });
         }
     ], callbackIn);

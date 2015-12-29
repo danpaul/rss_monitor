@@ -7,7 +7,7 @@
 var _ = require('underscore');
 var BaseModel = require('../lib/rethink_base_model');
 var debug = require('debug')('rss_monitor');
-
+var errors = require('../lib/errors');
 var rssReadFeed = require('../lib/rss_read_feed');
 
 module.exports = function(app){
@@ -26,20 +26,14 @@ module.exports = function(app){
     var feedMonitorInterval = app.settings.feedMonitorInterval;
     var intervals = {};
 
-    model.activate = function(id, callbackIn){
+    model.activate = function(id, callback){
         this.get(id, function(err, feed){
-            if( err ){
-                callbackIn(err);
-                return;
-            }
+            if( err ){ return callback(err); }
             model.update({id: id, active: true}, function(err){
-                if( err ){
-                    callbackIn(err);
-                } else {
-                    model.readFeed(feed);
-                    model.setInterval(feed);
-                    callbackIn();
-                }
+                if( err ){ return callback(err); }
+                model.readFeed(feed);
+                model.setInterval(feed);
+                return callback();
             });
         });
     }
@@ -71,12 +65,22 @@ module.exports = function(app){
                 return;
             }
             if( result.length > 0 ){
-                callback(null, result[0]);
-            } else {
-                self.create(feedObject, callback);
-            }
+                return callback(null, {status: 'success', feed: result[0]});
+            } 
+            self.create(feedObject, function(err, newFeed){
+                if( err ){ return callback(err); }
+                return callback(null, {status: 'success', feed: newFeed});
+            });
+
         });
     };
+
+    model._feedIsValid = function(url, callback){
+        // Todo: implement
+        callback(null, true);
+        // error callback:
+        // callback(errors.invalidFeed)
+    }
 
     model.readFeed = function(feed){
         debug('reading feed', feed.id)
@@ -106,6 +110,22 @@ module.exports = function(app){
             self.clearInterval(k);
         });
         callback();
+    }
+
+    /**
+        Required:
+            options.url
+    */
+    model.addAndActivate = function(options, callback){
+        var self = this;
+        self.createIfNew(options, function(err, resp){
+            if( err ){ return callback(err); }
+            if( resp.status !== 'success' ){ return callback(null, resp); }
+            self.activate(resp.feed.id, function(err){
+                if( err ){ return callback(err); }
+                return callback(null, {status: 'success', feed: resp.feed});
+            });
+        });
     }
 
     model._normalizeUrl = function(url){

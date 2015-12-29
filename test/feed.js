@@ -14,11 +14,12 @@ module.exports = function(app, callbackIn){
     async.series([
         // create
         function(callback){
-            feedModel.createIfNew({url: TEST_FEED}, function(err, feedIn){
+            feedModel.createIfNew({url: TEST_FEED}, function(err, resp){
                 if( err ){
                     callback(err); 
                 } else {
-                    feed = feedIn;
+                    assert(resp.status === 'success');
+                    feed = resp.feed;
                     app.testData.feed = feed;
                     callback();                    
                 }
@@ -30,11 +31,12 @@ module.exports = function(app, callbackIn){
         },
         // create
         function(callback){
-            feedModel.createIfNew({url: TEST_FEED_02}, function(err, feedIn){
+            feedModel.createIfNew({url: TEST_FEED_02}, function(err, resp){
                 if( err ){
                     callback(err); 
                 } else {
-                    feed2 = feedIn;
+                    assert(resp.status === 'success');
+                    feed2 = resp.feed;
                     callback();                    
                 }
             });
