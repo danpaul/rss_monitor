@@ -20,3 +20,4 @@ Prod: NODE_ENV=production node index.js
 * Delete test monitors/feeds
 * Delete test users
 * add cron to clear old user logs
+* check use of base.prototype.filter (may be non-indexed)

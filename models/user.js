@@ -1,22 +1,25 @@
 var _ = require('underscore');
 var BaseModel = require('../lib/rethink_base_model');
 var r = require('rethinkdb');
+var password = require('../lib/password');
 
 module.exports = function(app){
 
     var model = new BaseModel(this, app, __filename);
 
     // set model defaults
-    model.defaults  = {username: '', email: '', password: '', feeds: []}
+    model.defaults  = {username: null, email: '', password: '', feeds: []}
 
     // defines the rethink indexes
     model.indexes = ['username', 'email'];
+
+    model.publicFields = ['id', 'email', 'feeds'];
 
     var models = app.models;
 
     model.validateNewUser = function(userObject, callback){
         if( !userObject ||
-            !userObject.username ||
+            // !userObject.username ||
             !userObject.email ||
             !userObject.password ){
 
@@ -32,8 +35,9 @@ module.exports = function(app){
         // check if user already exists DB
         r.table(this.name)
             .filter(
-                r.row('username').eq(userObject.username)
-                .or(r.row('email')).eq(userObject.email)
+                r.row('email').eq(userObject.email)
+                // r.row('username').eq(userObject.username)
+                // .or(r.row('email')).eq(userObject.email)
             )            
             .run(this.connection, function(err, cursor){
                 if( err ){
@@ -117,13 +121,17 @@ module.exports = function(app){
                 callback(null, resp);
                 return;
             }
-            self.create(userObject, function(err, newUser){
-                if( err ){ callback(err); }
-                else{
-                    callback(null, {status: 'success', user: newUser});
-                }
+            password.encryptPassword(userObject.password,
+                                     function(err, hashedPassword){
+                if( err ){ return callback(err); }
+                userObject.password = hashedPassword;
+                self.create(userObject, function(err, newUser){
+                    if( err ){ return callback(err); }
+                    callback(null, {status: 'success',
+                                    user: self.getPublic(newUser)});
+                });
             });
-        })
+        });
     }
 
     /**
@@ -146,6 +154,55 @@ module.exports = function(app){
             }
             models.post.getFromFeeds({feedIds: user.feeds, page: page},
                                      callback);
+        });
+    }
+
+    /**
+        Required:
+            options.email
+            options.password
+            options.req
+    */
+    model.login = function(options, callback){
+        var self = this;
+        var failure = {status: 'failure',
+                       message: 'Email or password is not correct'};
+        this.getByEmail(options, function(err, user){
+            if( err ){ return callback(err); }
+            if( user === null ){ return callback(null, failure); }
+            password.comparePasswords(options.password,
+                                      user.password,
+                                      function(err, isMatch){
+                    if( err ){ return callback(err); }
+                    if( !isMatch ){ return callback(null, failure) }
+                    return callback(null, {status: 'success', user: self.getPublic(user) });
+            });
+        })
+    }
+
+    /**
+        Required:
+            options.email
+    */
+    model.getByEmail = function(options, callback){
+        this.filter({row: 'email', value: options.email}, function(err, rows){
+            if( err ){ return callback(err); }
+            if( rows.length !== 1 ){
+                return callback(null, null);
+            }
+            return callback(null, rows[0]);
+        });
+    }
+
+    model.getPublicUser = function(userId, callback){
+        var self = this;
+        this.get(userId, function(err, user){
+            if( err ){ return callback(err); }
+            if( !user ){
+                return callback(null,
+                                {status: 'failure', message: 'No user found'});
+            }
+            callback(null, {status: 'success', user: self.getPublic(user)});
         });
     }
 

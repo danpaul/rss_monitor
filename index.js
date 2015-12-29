@@ -5,7 +5,7 @@ var r = require('rethinkdb');
 var schemaBuilder = require('./lib/rethink_schema_builder');
 var tests = require('./test/index');
 
-var USE_SESSIONS = false;
+var USE_SESSIONS = true;
 
 /*******************************************************************************
 
@@ -16,6 +16,7 @@ var USE_SESSIONS = false;
 var express = require('express');
 var app = module.exports.app = exports.app = express();
 app.models = {};
+app.config = config;
 app.connection = null;
 app.settings = require('./settings');
 
@@ -25,13 +26,17 @@ app.use(express.static(__dirname + '/public'));
 
 if( USE_SESSIONS ){
     var session = require('express-session')
-    app.use(require('cookie-parser')(config.cookieSecret)); 
+    app.use(require('cookie-parser')(config.cookieSecret));
+    var RDBStore = require('express-session-rethinkdb')(session);
+    var rDBStore = new RDBStore({ connectOptions: config.rethink });
     app.use(session({
         secret: config.sessionSecret,
         resave: true,
-        saveUninitialized: true
+        saveUninitialized: true,
+        store: rDBStore
     }));
 }
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
@@ -78,26 +83,29 @@ r.connect(config.rethink, function(err, conn) {
             throw err;
             return;
         }
+
         /***********************************************************************
 
-                        RUN TESTS
+                    START SERVER
 
         ***********************************************************************/
-        tests(app, function(err){
-            if( err ){
-                throw err;
-                return;
-            }
-            console.log('TESTS PASSED!!!');
-            /*******************************************************************
 
-                        START SERVER
+        var server = app.listen(config.port, function () {
+            app.config.rootUrl = 'http://' + server.address().address +
+                                  ':' + server.address().port;
 
-            *******************************************************************/
-            var server = app.listen(config.port, function () {
-                console.log("Example app listening at http://%s:%s",
-                            server.address().address,
-                            server.address().port);
+            console.log("Example app listening at ", app.config.rootUrl);
+                /***************************************************************
+
+                                RUN TESTS
+
+                ****************************************************************/
+                tests(app, function(err){
+                    if( err ){
+                        throw err;
+                        return;
+                    }
+                    console.log('TESTS PASSED!!!');
             });
         });
     });

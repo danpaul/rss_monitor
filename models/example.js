@@ -23,5 +23,8 @@ module.exports = function(app){
     // defines the rethink indexes
     model.indexes = ['mostRecent', 'timestamp', {compound_index: ['field_one', 'field_two']}];
 
+    // used for .getPublic method
+    model.publicFields = ['foo', 'bar'];
+
     return model;
 }
