@@ -1,9 +1,60 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-/**
-    Properties:
-        visible
+var Notice = require('./Notice.jsx');
+var FormMixin = require('./mixins/FormMixin.jsx');
 
-*/
+var AddFeed = React.createClass({displayName: "AddFeed",
+    mixins: [FormMixin],
+    getInitialState: function(){
+        return {
+            feeds: [],
+            url: ''
+        }
+    },
+    componentDidMount: function(){ this.updateFeeds(); },
+    handleAddClick: function(e){
+        e.preventDefault();
+        var self = this;
+        self.props.services.addFeed({url: self.state.url}, function(resp){
+            if( resp.status !== 'success' ){
+                return alert(resp.message);
+            }
+            self.updateFeeds();
+        });
+    },
+    updateFeeds: function(e){
+console.log(3)
+        this.props.services.getUserFeeds(function(resp){
+            if( resp.status !== 'success' ){
+                return alert(resp.message);
+            }
+
+        });
+    },
+    render: function(){
+        if( !this.props.visible ){ return null; }
+        return React.createElement("div", null, 
+            React.createElement("form", {className: "forms"}, 
+                React.createElement("section", null, 
+                    React.createElement("label", null, "Feed URL"), 
+                    React.createElement("input", {
+                        type: "text", 
+                        name: "url", 
+                        className: "width-6", 
+                        value: this.state.url, 
+                        onChange: this.handleInputChange})
+                ), 
+                React.createElement("section", null, 
+                    React.createElement("button", {type: "primary", onClick: this.handleAddClick}, 
+                        "Add"
+                    )
+                )
+            )
+        )
+    }
+});
+module.exports = AddFeed;
+
+},{"./Notice.jsx":5,"./mixins/FormMixin.jsx":7}],2:[function(require,module,exports){
 var Loading = React.createClass({displayName: "Loading",
     getInitialState: function(){
         return {
@@ -20,47 +71,33 @@ var Loading = React.createClass({displayName: "Loading",
     },
     render: function(){
         if( !this.props.visible ){ return null; }
-        return React.createElement("div", null, "Loading", this.state.dots)
+        return React.createElement("h1", null, "Loading", this.state.dots)
     }
 });
 
 module.exports = Loading;
 
-},{}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
+var FormMixin = require('./mixins/FormMixin.jsx');
 
-/**
-    Properties:
-        visible
-
-*/
 var LoginForm = React.createClass({displayName: "LoginForm",
-
+    mixins: [FormMixin],
     getInitialState: function(){
         return {
             email: '',
             password: ''
         };
     },
-
-    handleInputChange: function(e){
-        var newState = {};
-        newState[e.target.name] = e.target.value;
-        this.setState(newState);
-    },
-
     handleLoginClick: function(e){
         e.preventDefault();
         this.props.actionHandler('login', this.state);
     },
-
     handleCancelClick: function(e){
         e.preventDefault();
     },
-
     handleRegisterClick: function(e){
         this.props.actionHandler('showRegisterForm');
     },
-
     render: function(){
         if( !this.props.visible ){ return null; }
         return React.createElement("div", null, 
@@ -94,7 +131,29 @@ var LoginForm = React.createClass({displayName: "LoginForm",
 
 module.exports = LoginForm;
 
-},{}],3:[function(require,module,exports){
+},{"./mixins/FormMixin.jsx":7}],4:[function(require,module,exports){
+var AddFeed = require('./AddFeed.jsx');
+
+var MainUser = React.createClass({displayName: "MainUser",
+    getInitialState: function(){
+        return {
+            // visible: 'posts'
+            visible: 'addFeed'
+        }
+    },
+    render: function(){
+        if( !this.props.visible ){ return null; }
+        return React.createElement("div", null, 
+            React.createElement(AddFeed, {
+                visible: this.state.visible === 'addFeed', 
+                services: this.props.services})
+        )
+    }
+});
+
+module.exports = MainUser;
+
+},{"./AddFeed.jsx":1}],5:[function(require,module,exports){
 /**
     Properties:
         alertType: primary, error, warning, success
@@ -119,35 +178,27 @@ var Loading = React.createClass({displayName: "Loading",
 
 module.exports = Loading;
 
-},{}],4:[function(require,module,exports){
-var LoginForm = React.createClass({displayName: "LoginForm",
+},{}],6:[function(require,module,exports){
+var FormMixin = require('./mixins/FormMixin.jsx');
 
+var LoginForm = React.createClass({displayName: "LoginForm",
+    mixins: [FormMixin],
     getInitialState: function(){
         return {
             email: '',
             password: ''
         };
     },
-
-    handleInputChange: function(e){
-        var newState = {};
-        newState[e.target.name] = e.target.value;
-        this.setState(newState);
-    },
-
     handleRegisterClick: function(e){
         e.preventDefault();
         this.props.actionHandler('register', this.state);
     },
-
     handleCancelClick: function(e){
         e.preventDefault();
     },
-
     handleLoginClick: function(e){
         this.props.actionHandler('showLoginForm');
     },
-
     render: function(){
         if( !this.props.visible ){ return null; }
         return React.createElement("div", null, 
@@ -181,7 +232,16 @@ var LoginForm = React.createClass({displayName: "LoginForm",
 
 module.exports = LoginForm;
 
-},{}],5:[function(require,module,exports){
+},{"./mixins/FormMixin.jsx":7}],7:[function(require,module,exports){
+module.exports = {
+    handleInputChange: function(e){
+        var newState = {};
+        newState[e.target.name] = e.target.value;
+        this.setState(newState);
+    }
+}
+
+},{}],8:[function(require,module,exports){
 var config = {};
 
 config.env = window.location.href.indexOf('localhost:3000') !== -1 ? 
@@ -197,14 +257,17 @@ if( config.env === 'dev' ){
 
 module.exports = config;
 
-},{}],6:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 var LoginForm = require('./components/LoginForm.jsx');
 var Loading = require('./components/Loading.jsx');
+var MainUser = require('./components/MainUser.jsx');
 var Notice = require('./components/Notice.jsx');
 var RegisterForm = require('./components/RegisterForm.jsx');
 var services = require('./services');
 
 var Controller = React.createClass({displayName: "Controller",
+
+    user: null,
 
     getInitialState: function(){
         return {
@@ -224,7 +287,8 @@ var Controller = React.createClass({displayName: "Controller",
             init: function(options){
                 services.getUser(function(resp){
                     if( resp.status === 'success' ){
-                        // ...
+                        self.user = resp.user;
+                        self.setState({visible: 'mainUser'});
                     } else if( resp.status === 'failure' ){
                         self.setState({visible: 'login'});
                     } else if( resp.status === 'error' ) {
@@ -236,7 +300,7 @@ var Controller = React.createClass({displayName: "Controller",
             login: function(options){
                 services.login(options, function(resp){
                     if( resp.status === 'success' ){
-                        // ...
+                        // load user posts
                     } else {
                         self.setState({ showNotice: 'true',
                                         noticeMessage: resp.message });
@@ -260,7 +324,7 @@ var Controller = React.createClass({displayName: "Controller",
             },
             showRegisterForm: function(options){
                 self.setState({visible: 'register'});
-            }
+            },
         }
         if( !actions[action] ){ return console.log('No action: ', action); }
         var f = actions[action];
@@ -285,7 +349,11 @@ var Controller = React.createClass({displayName: "Controller",
                 actionHandler: this.actionHandler}), 
             React.createElement(RegisterForm, {
                 visible: this.state.visible === 'register', 
-                actionHandler: this.actionHandler})
+                actionHandler: this.actionHandler}), 
+            React.createElement(MainUser, {
+                visible: this.state.visible === 'mainUser', 
+                actionHandler: this.actionHandler, 
+                services: services})
         );
 
     }
@@ -296,7 +364,7 @@ React.render(
     document.getElementById('content')
 );
 
-},{"./components/Loading.jsx":1,"./components/LoginForm.jsx":2,"./components/Notice.jsx":3,"./components/RegisterForm.jsx":4,"./services":7}],7:[function(require,module,exports){
+},{"./components/Loading.jsx":2,"./components/LoginForm.jsx":3,"./components/MainUser.jsx":4,"./components/Notice.jsx":5,"./components/RegisterForm.jsx":6,"./services":10}],10:[function(require,module,exports){
 /**
     Methods guarantee a response object:
         {status: ['success', 'failure', 'error']}
@@ -326,36 +394,45 @@ services.makeRequest = function(type, url, data, callback){
         callback(resp);
     }
     requestObject.error = function(err){
-        console.log('Error: ', err);
+        console.log('Services error: ', err);
         callback(SERVER_ERROR);
     }
     $.ajax(requestObject);
 }
-
 services.login = function(options, callback){
     services.makeRequest('POST',
                          config.rootUrl + '/user/login',
                          {email: options.email, password: options.password},
                          callback);
 }
-
 services.register = function(options, callback){
     services.makeRequest('POST',
                          config.rootUrl + '/user',
                          {email: options.email, password: options.password},
                          callback);
 }
-
 services.getUser = function(callback){
     services.makeRequest('GET',
                          config.rootUrl + '/user',
                          null,
                          callback);
 }
+services.addFeed = function(options, callback){
+    services.makeRequest('POST',
+                         config.rootUrl + '/feed',
+                         {url: options.url},
+                         callback);
+}
+services.getUserFeeds = function(callback){
+    services.makeRequest('GET',
+                         config.rootUrl + '/user/feeds',
+                         {format: 'object'},
+                         callback);
+}
 
 module.exports = services;
 
-},{"./config":5,"jquery":8}],8:[function(require,module,exports){
+},{"./config":8,"jquery":11}],11:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.4
  * http://jquery.com/
@@ -9567,4 +9644,4 @@ return jQuery;
 
 }));
 
-},{}]},{},[6]);
+},{}]},{},[9]);

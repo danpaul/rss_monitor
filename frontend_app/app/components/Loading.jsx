@@ -1,8 +1,3 @@
-/**
-    Properties:
-        visible
-
-*/
 var Loading = React.createClass({
     getInitialState: function(){
         return {
@@ -19,7 +14,7 @@ var Loading = React.createClass({
     },
     render: function(){
         if( !this.props.visible ){ return null; }
-        return <div>Loading{this.state.dots}</div>
+        return <h1>Loading{this.state.dots}</h1>
     }
 });
 

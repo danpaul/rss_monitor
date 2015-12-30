@@ -1,31 +1,23 @@
-var LoginForm = React.createClass({
+var FormMixin = require('./mixins/FormMixin.jsx');
 
+var LoginForm = React.createClass({
+    mixins: [FormMixin],
     getInitialState: function(){
         return {
             email: '',
             password: ''
         };
     },
-
-    handleInputChange: function(e){
-        var newState = {};
-        newState[e.target.name] = e.target.value;
-        this.setState(newState);
-    },
-
     handleRegisterClick: function(e){
         e.preventDefault();
         this.props.actionHandler('register', this.state);
     },
-
     handleCancelClick: function(e){
         e.preventDefault();
     },
-
     handleLoginClick: function(e){
         this.props.actionHandler('showLoginForm');
     },
-
     render: function(){
         if( !this.props.visible ){ return null; }
         return <div>

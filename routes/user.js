@@ -67,12 +67,22 @@ module.exports = function(app){
         })
     });
 
+    /**
+        optional:
+            req.query.format: ['object'] - returns objects instead of ids
+    */
     route.get('/feeds', function(req, res){
         if( !auth.check(req, res) ){ return; }
         var userId = auth.getUserId(req);
         models.user.get(userId, function(err, user){
             if( err ){ return res.json(errors.server); }
-            return res.json({status: 'success', feeds: user.feeds});
+            if( !req.query || !req.query.format || req.query.format !== 'object' ){
+                return res.json({status: 'success', feeds: user.feeds});
+            }
+            models.feed.getAllFromArray(user.feeds, function(err, feeds){
+                if( err ){ return res.json(errors.server); }
+                return res.json({status: 'success', feeds: feeds});
+            });
         })
     });
 

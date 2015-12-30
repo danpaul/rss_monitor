@@ -27,30 +27,39 @@ services.makeRequest = function(type, url, data, callback){
         callback(resp);
     }
     requestObject.error = function(err){
-        console.log('Error: ', err);
+        console.log('Services error: ', err);
         callback(SERVER_ERROR);
     }
     $.ajax(requestObject);
 }
-
 services.login = function(options, callback){
     services.makeRequest('POST',
                          config.rootUrl + '/user/login',
                          {email: options.email, password: options.password},
                          callback);
 }
-
 services.register = function(options, callback){
     services.makeRequest('POST',
                          config.rootUrl + '/user',
                          {email: options.email, password: options.password},
                          callback);
 }
-
 services.getUser = function(callback){
     services.makeRequest('GET',
                          config.rootUrl + '/user',
                          null,
+                         callback);
+}
+services.addFeed = function(options, callback){
+    services.makeRequest('POST',
+                         config.rootUrl + '/feed',
+                         {url: options.url},
+                         callback);
+}
+services.getUserFeeds = function(callback){
+    services.makeRequest('GET',
+                         config.rootUrl + '/user/feeds',
+                         {format: 'object'},
                          callback);
 }
 

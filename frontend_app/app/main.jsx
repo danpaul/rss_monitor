@@ -1,10 +1,13 @@
 var LoginForm = require('./components/LoginForm.jsx');
 var Loading = require('./components/Loading.jsx');
+var MainUser = require('./components/MainUser.jsx');
 var Notice = require('./components/Notice.jsx');
 var RegisterForm = require('./components/RegisterForm.jsx');
 var services = require('./services');
 
 var Controller = React.createClass({
+
+    user: null,
 
     getInitialState: function(){
         return {
@@ -24,7 +27,8 @@ var Controller = React.createClass({
             init: function(options){
                 services.getUser(function(resp){
                     if( resp.status === 'success' ){
-                        // ...
+                        self.user = resp.user;
+                        self.setState({visible: 'mainUser'});
                     } else if( resp.status === 'failure' ){
                         self.setState({visible: 'login'});
                     } else if( resp.status === 'error' ) {
@@ -36,7 +40,7 @@ var Controller = React.createClass({
             login: function(options){
                 services.login(options, function(resp){
                     if( resp.status === 'success' ){
-                        // ...
+                        // load user posts
                     } else {
                         self.setState({ showNotice: 'true',
                                         noticeMessage: resp.message });
@@ -60,7 +64,7 @@ var Controller = React.createClass({
             },
             showRegisterForm: function(options){
                 self.setState({visible: 'register'});
-            }
+            },
         }
         if( !actions[action] ){ return console.log('No action: ', action); }
         var f = actions[action];
@@ -86,6 +90,10 @@ var Controller = React.createClass({
             <RegisterForm
                 visible={this.state.visible === 'register'}
                 actionHandler={this.actionHandler} />
+            <MainUser
+                visible={this.state.visible === 'mainUser'}
+                actionHandler={this.actionHandler}
+                services={services} />
         </div>;
 
     }
