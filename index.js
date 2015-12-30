@@ -97,17 +97,19 @@ r.connect(config.rethink, function(err, conn) {
                                   ':' + server.address().port;
 
             console.log("Example app listening at ", app.config.rootUrl);
-                /***************************************************************
+            /*******************************************************************
 
-                                RUN TESTS
+                            RUN TESTS
 
-                ****************************************************************/
-                tests(app, function(err){
-                    if( err ){
-                        throw err;
-                        return;
-                    }
-                    console.log('TESTS PASSED!!!');
+            *******************************************************************/
+            if( typeof(process.env.RUN_TESTS) !== 'undefined' &&
+                process.env.RUN_TESTS === 'false' ){ return; }
+            tests(app, function(err){
+                if( err ){
+                    throw err;
+                    return;
+                }
+                console.log('TESTS PASSED!!!');
             });
         });
     });
