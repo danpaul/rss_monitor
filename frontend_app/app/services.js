@@ -3,9 +3,9 @@
         {status: ['success', 'failure', 'error']}
 
 */
-
-var config = require('./config');
+var _ = require('underscore');
 var $ = require('jquery');
+var config = require('./config');
 
 var services = {};
 var SERVER_ERROR = {status: 'error', message: 'A server error occurred'};
@@ -31,6 +31,15 @@ services.makeRequest = function(type, url, data, callback){
         callback(SERVER_ERROR);
     }
     $.ajax(requestObject);
+}
+services._formatPosts = function(resp, callback){
+    if( resp.status !== 'success' ){ return(call(resp)); }
+    resp.posts = _.map(resp.posts, function(post){
+        post.link = post.link || '';
+        post.title = post.title || '';
+        return post;
+    });
+    callback(resp);
 }
 services.login = function(options, callback){
     services.makeRequest('POST',
@@ -67,13 +76,22 @@ services.getUserFeeds = function(callback){
                          config.rootUrl + '/user/feeds',
                          {format: 'object'},
                          callback);
+
 }
 
-// services.getUserReadPosts = function(callback){
-//     services.makeRequest('GET',
-//                          config.rootUrl + '/user/feeds',
-//                          {format: 'object'},
-//                          callback);
-// }
+services.getUserPostLog = function(callback){
+    services.makeRequest('GET',
+                         config.rootUrl + '/log',
+                         null,
+                         callback);
+}
+services.getUserPosts = function(options, callback){
+    var self = this;
+    var page = options.page ? options.page : 1;
+    services.makeRequest('GET',
+                         config.rootUrl + '/post/user',
+                         {page: page},
+                         function(resp){ self._formatPosts(resp, callback); });
+}
 
 module.exports = services;

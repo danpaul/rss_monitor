@@ -8,6 +8,10 @@ var route = express();
 module.exports = function(app){
     var models = app.models;
 
+    /**
+        Get user's posts
+        Optional: req.query.page
+    */
     route.get('/user', function(req, res){
         if( !auth.check(req, res) ){ return; }
         var userId = auth.getUserId(req);

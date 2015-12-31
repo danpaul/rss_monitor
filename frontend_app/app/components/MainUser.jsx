@@ -6,8 +6,7 @@ var UserPosts = require('./UserPosts.jsx');
 var MainUser = React.createClass({
     getInitialState: function(){
         return {
-            // visible: 'posts'
-            visible: 'feeds'
+            visible: 'posts'
         }
     },
     handleMenuSelect: function(menuSelected){
