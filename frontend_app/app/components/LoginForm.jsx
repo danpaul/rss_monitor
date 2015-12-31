@@ -1,4 +1,5 @@
 var FormMixin = require('./mixins/FormMixin.jsx');
+var React = require('react');
 
 var LoginForm = React.createClass({
     mixins: [FormMixin],

@@ -1,15 +1,14 @@
-var Notice = require('./Notice.jsx');
 var FormMixin = require('./mixins/FormMixin.jsx');
+var Notice = require('./Notice.jsx');
+var React = require('react');
 
-var AddFeed = React.createClass({
+var UserFeeds = React.createClass({
     mixins: [FormMixin],
     getInitialState: function(){
         return {
-            feeds: [],
             url: ''
         }
     },
-    componentDidMount: function(){ this.updateFeeds(); },
     handleAddClick: function(e){
         e.preventDefault();
         var self = this;
@@ -17,19 +16,11 @@ var AddFeed = React.createClass({
             if( resp.status !== 'success' ){
                 return alert(resp.message);
             }
-            self.updateFeeds();
-        });
-    },
-    updateFeeds: function(e){
-        this.props.services.getUserFeeds(function(resp){
-            if( resp.status !== 'success' ){
-                return alert(resp.message);
-            }
-
+            // todo: add success message
+            self.setState({url: ''}, self.props.updateFeeds);
         });
     },
     render: function(){
-        if( !this.props.visible ){ return null; }
         return <div>
             <form className="forms">
                 <section>
@@ -50,4 +41,4 @@ var AddFeed = React.createClass({
         </div>
     }
 });
-module.exports = AddFeed;
+module.exports = UserFeeds;

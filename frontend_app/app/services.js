@@ -56,11 +56,24 @@ services.addFeed = function(options, callback){
                          {url: options.url},
                          callback);
 }
+services.removeFeed = function(options, callback){
+    services.makeRequest('POST',
+                         config.rootUrl + '/user/remove-feed/' + options.feedId,
+                         null,
+                         callback);
+}
 services.getUserFeeds = function(callback){
     services.makeRequest('GET',
                          config.rootUrl + '/user/feeds',
                          {format: 'object'},
                          callback);
 }
+
+// services.getUserReadPosts = function(callback){
+//     services.makeRequest('GET',
+//                          config.rootUrl + '/user/feeds',
+//                          {format: 'object'},
+//                          callback);
+// }
 
 module.exports = services;

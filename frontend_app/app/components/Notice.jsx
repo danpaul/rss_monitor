@@ -1,3 +1,4 @@
+var React = require('react');
 /**
     Properties:
         alertType: primary, error, warning, success

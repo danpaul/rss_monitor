@@ -1,3 +1,5 @@
+var React = require('react');
+
 var Loading = React.createClass({
     getInitialState: function(){
         return {

@@ -3,6 +3,8 @@ var Loading = require('./components/Loading.jsx');
 var MainUser = require('./components/MainUser.jsx');
 var Notice = require('./components/Notice.jsx');
 var RegisterForm = require('./components/RegisterForm.jsx');
+var React = require('react');
+var ReactDOM = require('react-dom');
 var services = require('./services');
 
 var Controller = React.createClass({
@@ -99,7 +101,7 @@ var Controller = React.createClass({
     }
 });
 
-React.render(
+ReactDOM.render(
     <Controller />,
     document.getElementById('content')
 );
