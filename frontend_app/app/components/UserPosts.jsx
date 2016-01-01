@@ -24,11 +24,15 @@ var UserPosts = React.createClass({
             if( resp.status !== 'success'){
                 return alert(resp.message);
             }
-            _.each(resp.logs, function(log){
-                // Todo...
-            })
+            self.addPostsToRead(resp.logs);
             self.loadPosts();
         });
+    },
+    // takes an array of post IDS or single ID
+    addPostsToRead: function(postIds){
+        var self = this;
+        if( !_.isArray(postIds) ){ return self.readPosts[postIds] = true; }
+        _.each(postIds, function(postId){ self.readPosts[postId] = true; });
     },
     // loads posts into the queue
     loadPosts: function(){
@@ -72,6 +76,16 @@ var UserPosts = React.createClass({
     },
     handleNextClick: function(){
         var self = this;
+        var previousPostIds = _.map(this.state.visiblePosts, function(post){
+            return post.id;
+        });
+        this.addPostsToRead(previousPostIds);
+        this.props.services.addPostsToLog({posts: previousPostIds},
+                                          function(resp){
+            if(resp.status !== 'success'){
+                console.log('Error saving postst to log:', resp);
+            }
+        })
         this.setState({postPage: this.state.postPage + 1}, function(){
             self.loadPagePosts(self.loadPosts);
         });

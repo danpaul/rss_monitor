@@ -450,11 +450,15 @@ var UserPosts = React.createClass({displayName: "UserPosts",
             if( resp.status !== 'success'){
                 return alert(resp.message);
             }
-            _.each(resp.logs, function(log){
-                // Todo...
-            })
+            self.addPostsToRead(resp.logs);
             self.loadPosts();
         });
+    },
+    // takes an array of post IDS or single ID
+    addPostsToRead: function(postIds){
+        var self = this;
+        if( !_.isArray(postIds) ){ return self.readPosts[postIds] = true; }
+        _.each(postIds, function(postId){ self.readPosts[postId] = true; });
     },
     // loads posts into the queue
     loadPosts: function(){
@@ -498,6 +502,16 @@ var UserPosts = React.createClass({displayName: "UserPosts",
     },
     handleNextClick: function(){
         var self = this;
+        var previousPostIds = _.map(this.state.visiblePosts, function(post){
+            return post.id;
+        });
+        this.addPostsToRead(previousPostIds);
+        this.props.services.addPostsToLog({posts: previousPostIds},
+                                          function(resp){
+            if(resp.status !== 'success'){
+                console.log('Error saving postst to log:', resp);
+            }
+        })
         this.setState({postPage: this.state.postPage + 1}, function(){
             self.loadPagePosts(self.loadPosts);
         });
@@ -703,11 +717,11 @@ services.makeRequest = function(type, url, data, callback){
     }
     if( data ){ requestObject.data = data; }
     if( config.debug ){
-        console.log('Making request with data: ', requestObject);
+        console.log('Request: ', requestObject);
     }
     requestObject.success = function(resp){
         if( config.debug ){
-            console.log('Received response: ', resp);
+            console.log('Response: ', resp);
         }
         callback(resp);
     }
@@ -767,9 +781,7 @@ services.getUserFeeds = function(callback){
                          config.rootUrl + '/user/feeds',
                          {format: 'object'},
                          callback);
-
 }
-
 services.getUserPostLog = function(callback){
     services.makeRequest('GET',
                          config.rootUrl + '/log',
@@ -784,7 +796,13 @@ services.getUserPosts = function(options, callback){
                          {page: page},
                          function(resp){ self._formatPosts(resp, callback); });
 }
-
+// Required: options.posts (an array of postIds)
+services.addPostsToLog = function(options, callback){
+    services.makeRequest('POST',
+                         config.rootUrl + '/log',
+                         {posts: options.posts},
+                         callback);
+}
 module.exports = services;
 
 },{"./config":13,"jquery":16,"underscore":174}],16:[function(require,module,exports){

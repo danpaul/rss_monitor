@@ -18,11 +18,11 @@ services.makeRequest = function(type, url, data, callback){
     }
     if( data ){ requestObject.data = data; }
     if( config.debug ){
-        console.log('Making request with data: ', requestObject);
+        console.log('Request: ', requestObject);
     }
     requestObject.success = function(resp){
         if( config.debug ){
-            console.log('Received response: ', resp);
+            console.log('Response: ', resp);
         }
         callback(resp);
     }
@@ -82,9 +82,7 @@ services.getUserFeeds = function(callback){
                          config.rootUrl + '/user/feeds',
                          {format: 'object'},
                          callback);
-
 }
-
 services.getUserPostLog = function(callback){
     services.makeRequest('GET',
                          config.rootUrl + '/log',
@@ -99,5 +97,11 @@ services.getUserPosts = function(options, callback){
                          {page: page},
                          function(resp){ self._formatPosts(resp, callback); });
 }
-
+// Required: options.posts (an array of postIds)
+services.addPostsToLog = function(options, callback){
+    services.makeRequest('POST',
+                         config.rootUrl + '/log',
+                         {posts: options.posts},
+                         callback);
+}
 module.exports = services;
