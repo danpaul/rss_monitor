@@ -93,14 +93,14 @@ var LoginForm = React.createClass({displayName: "LoginForm",
     },
     render: function(){
         if( !this.props.visible ){ return null; }
-        return React.createElement("div", null, 
+        return React.createElement("div", {className: "form-wrapper"}, 
             React.createElement("form", {className: "forms"}, 
                 React.createElement("section", null, 
                     React.createElement("label", null, "Email"), 
                     React.createElement("input", {
                         type: "email", 
                         name: "email", 
-                        className: "width-6", 
+                        className: "width-12", 
                         value: this.state.email, 
                         onChange: this.handleInputChange})
                 ), 
@@ -109,12 +109,18 @@ var LoginForm = React.createClass({displayName: "LoginForm",
                     React.createElement("input", {
                         type: "password", 
                         name: "password", 
+                        className: "width-12", 
                         value: this.state.password, 
                         onChange: this.handleInputChange})
                 ), 
                 React.createElement("section", null, 
-                    React.createElement("button", {type: "primary", onClick: this.handleLoginClick}, "Login"), 
-                    React.createElement("button", {onClick: this.handleCancelClick}, "Cancel")
+                    React.createElement("button", {
+                        type: "primary", 
+                        onClick: this.handleLoginClick
+                        }, "Login"), 
+                    React.createElement("button", {
+                        onClick: this.handleCancelClick, 
+                        className: "hidden"}, "Cancel")
                 )
             ), 
             React.createElement("a", {onClick: this.handleRegisterClick}, "Register")
@@ -144,7 +150,8 @@ var MainUser = React.createClass({displayName: "MainUser",
         return React.createElement("div", null, 
             React.createElement(UserMenu, {
                 selected: this.state.visible, 
-                handleMenuSelect: this.handleMenuSelect}), 
+                handleMenuSelect: this.handleMenuSelect, 
+                actionHandler: this.props.actionHandler}), 
             React.createElement(UserFeedTab, {
                 visible: this.state.visible === 'feeds', 
                 services: this.props.services}), 
@@ -170,10 +177,11 @@ var Loading = React.createClass({displayName: "Loading",
     },
     render: function(){
         if( !this.props.visible ){ return null; }
-        var alertClass = 'alert alert-' + (this.props.alertType || 'primary');
+        var alertType = this.props.alertType ? this.props.alertType : 'error';
+        var alertClass = 'alert alert-' + alertType;
         var message = this.props.message || '';
         return React.createElement("div", {className: alertClass}, 
-            React.createElement("div", null, 
+            React.createElement("div", {className: "closeX"}, 
                 React.createElement("a", {className: "closeX", onClick: this.handleCloseClick}, "X")
             ), 
             React.createElement("div", null, message)
@@ -199,11 +207,13 @@ var Post = React.createClass({displayName: "Post",
         });
     },
     render: function(){
+        // var htmlDiv = {__html: this.props.post.summary};
+        // <div dangerouslySetInnerHTML={htmlDiv} />
         return React.createElement("div", null, 
             React.createElement("a", {
                 href: this.props.post.link, 
                 target: "_blank"}, 
-                this.props.post.title
+                React.createElement("h4", null, this.props.post.title)
             )
         );
     }
@@ -219,29 +229,43 @@ var LoginForm = React.createClass({displayName: "LoginForm",
     getInitialState: function(){
         return {
             email: '',
-            password: ''
+            password: '',
+            confirm_password: '',
+            passwordsMatch: 'true'
         };
     },
     handleRegisterClick: function(e){
         e.preventDefault();
-        this.props.actionHandler('register', this.state);
+        this.props.actionHandler('register',
+                                 {email: this.state.email,
+                                  password: this.state.password});
+        this.setState({email: '', password: '', confirm_password: ''});
     },
     handleCancelClick: function(e){
         e.preventDefault();
+    },
+    handleConfirmPasswordChange: function(e){
+        var self = this;
+        this.handleInputChange(e, function(){
+            var passwordsMatch =
+                (self.state.password === self.state.confirm_password);
+            self.setState({passwordsMatch: passwordsMatch})
+        });
     },
     handleLoginClick: function(e){
         this.props.actionHandler('showLoginForm');
     },
     render: function(){
         if( !this.props.visible ){ return null; }
-        return React.createElement("div", null, 
+        var passwordMatchError = React.createElement("span", {className: "error"}, "Passwords do not match");
+        return React.createElement("div", {className: "form-wrapper"}, 
             React.createElement("form", {className: "forms"}, 
                 React.createElement("section", null, 
                     React.createElement("label", null, "Email"), 
                     React.createElement("input", {
                         type: "email", 
                         name: "email", 
-                        className: "width-6", 
+                        className: "width-12", 
                         value: this.state.email, 
                         onChange: this.handleInputChange})
                 ), 
@@ -250,12 +274,31 @@ var LoginForm = React.createClass({displayName: "LoginForm",
                     React.createElement("input", {
                         type: "password", 
                         name: "password", 
+                        className: "width-12", 
                         value: this.state.password, 
                         onChange: this.handleInputChange})
                 ), 
                 React.createElement("section", null, 
-                    React.createElement("button", {type: "primary", onClick: this.handleRegisterClick}, "Register"), 
-                    React.createElement("button", {onClick: this.handleCancelClick}, "Cancel")
+                    React.createElement("label", null, 
+                        "Confirm Password ", this.state.passwordsMatch ? '' : passwordMatchError
+                    ), 
+                    React.createElement("input", {
+                        type: "password", 
+                        name: "confirm_password", 
+                        className: this.state.passwordsMatch ? 'width-12' : 'width-12 input-error', 
+                        value: this.state.confirm_password, 
+                        onChange: this.handleConfirmPasswordChange})
+                ), 
+                React.createElement("section", null, 
+                    React.createElement("button", {
+                        type: "primary", 
+                        onClick: this.handleRegisterClick}, 
+                        "Register"
+                    ), 
+                    React.createElement("button", {
+                        onClick: this.handleCancelClick, 
+                        className: "hidden"
+                    }, "Cancel")
                 )
             ), 
             React.createElement("a", {onClick: this.handleLoginClick}, "Login")
@@ -354,12 +397,15 @@ var UserFeedTab = React.createClass({displayName: "UserFeedTab",
     },
     handleButtonClick: function(e){
         var selected = ($(e.target).data('value'));
+        if( selected === 'logout' ){
+            return this.props.actionHandler('logout');
+        }
         this.props.handleMenuSelect(selected);
     },
     render: function(){
         var self = this;
         var props = {};
-        _.each(['feeds', 'posts'], function(menuItem){
+        _.each(['feeds', 'posts', 'logout'], function(menuItem){
             props[menuItem] =
                 {   outline: true,
                     onClick: self.handleButtonClick };
@@ -367,7 +413,11 @@ var UserFeedTab = React.createClass({displayName: "UserFeedTab",
         props[this.props.selected]['disabled'] = true;
         return React.createElement("div", null, 
             React.createElement("button", React.__spread({},  props['feeds'], {"data-value": "feeds"}), "Feeds"), 
-            React.createElement("button", React.__spread({},  props['posts'], {"data-value": "posts"}), "Posts")
+            React.createElement("button", React.__spread({},  props['posts'], {"data-value": "posts"}), "Posts"), 
+            React.createElement("button", React.__spread({},  props['logout'], 
+                    {"data-value": "logout", 
+                    type: "black", 
+                    className: "button-logout"}), "Logout")
         )
     }
 });
@@ -384,7 +434,7 @@ var UserPosts = React.createClass({displayName: "UserPosts",
     page: 1,
     settings: {
         minPostsInQueue: 40,
-        postsPerPage: 10
+        postsPerPage: 20
     },
     getInitialState: function(){
         return {
@@ -488,10 +538,11 @@ module.exports = UserPosts;
 
 },{"./Post.jsx":6,"react":173,"underscore":174}],12:[function(require,module,exports){
 module.exports = {
-    handleInputChange: function(e){
+    handleInputChange: function(e, callbackIn){
+        var callback = callbackIn || function(){};
         var newState = {};
         newState[e.target.name] = e.target.value;
-        this.setState(newState);
+        this.setState(newState, callback);
     }
 }
 
@@ -556,11 +607,19 @@ var Controller = React.createClass({displayName: "Controller",
             login: function(options){
                 services.login(options, function(resp){
                     if( resp.status === 'success' ){
-                        // load user posts
+                        self.setState({ visible: 'mainUser' });
                     } else {
                         self.setState({ showNotice: 'true',
                                         noticeMessage: resp.message });
                     }
+                });
+            },
+            logout: function(options){
+                services.logout(function(resp){
+                    if( resp.status !== 'success' ){
+                        return alert(resp.message);
+                    }
+                    window.location.reload();
                 });
             },
             register: function(options){
@@ -568,7 +627,10 @@ var Controller = React.createClass({displayName: "Controller",
                     if( resp.status === 'success' ){
                         self.setState({ showNotice: 'true',
                                         noticeMessage: 'Success!!! Please login',
-                                        visible: 'login' });
+                                        alertType: 'success',
+                                        visible: 'login' }, function(){
+                            self.setState({alertType: null})
+                        });
                     } else {
                         self.setState({ showNotice: 'true',
                                         noticeMessage: resp.message });
@@ -593,11 +655,12 @@ var Controller = React.createClass({displayName: "Controller",
 
     render: function(){
         var self = this;
-        return React.createElement("div", null, 
+        return React.createElement("div", {className: "wrapper"}, 
             React.createElement(Notice, {
                 visible: this.state.showNotice, 
                 message: this.state.noticeMessage, 
-                actionHandler: this.actionHandler}), 
+                actionHandler: this.actionHandler, 
+                alertType: this.state.alertType}), 
             React.createElement(Loading, {
                 visible: this.state.visible === 'loading'}), 
             React.createElement(LoginForm, {
@@ -610,8 +673,7 @@ var Controller = React.createClass({displayName: "Controller",
                 visible: this.state.visible === 'mainUser', 
                 actionHandler: this.actionHandler, 
                 services: services})
-        );
-
+        )
     }
 });
 
@@ -668,6 +730,12 @@ services.login = function(options, callback){
     services.makeRequest('POST',
                          config.rootUrl + '/user/login',
                          {email: options.email, password: options.password},
+                         callback);
+}
+services.logout = function(callback){
+    services.makeRequest('POST',
+                         config.rootUrl + '/user/logout',
+                         null,
                          callback);
 }
 services.register = function(options, callback){

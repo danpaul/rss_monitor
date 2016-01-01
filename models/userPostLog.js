@@ -1,4 +1,5 @@
 var _ = require('underscore');
+var async = require('async');
 var BaseModel = require('../lib/rethink_base_model');
 var r = require('rethinkdb');
 
@@ -42,6 +43,20 @@ module.exports = function(app){
             options.timestamp = Date.now();
             self.create(options, callback);
         });
+    }
+
+    /**
+        Required:
+            options.posts (post IDS)
+            options.userId
+        Todo: this could be more efficient using getAll with the postId
+            array then filtering based on the results
+    */
+    model.addMultiple = function(options, callbackIn){
+        var self = this;
+        async.eachSeries(options.posts, function(postId, callback){
+            self.add({postId: postId, userId: options.userId}, callback);
+        }, callbackIn);
     }
 
     /**

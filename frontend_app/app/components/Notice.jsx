@@ -10,10 +10,11 @@ var Loading = React.createClass({
     },
     render: function(){
         if( !this.props.visible ){ return null; }
-        var alertClass = 'alert alert-' + (this.props.alertType || 'primary');
+        var alertType = this.props.alertType ? this.props.alertType : 'error';
+        var alertClass = 'alert alert-' + alertType;
         var message = this.props.message || '';
         return <div className={alertClass}>
-            <div>
+            <div className="closeX">
                 <a className="closeX" onClick={this.handleCloseClick}>X</a>
             </div>
             <div>{message}</div>

@@ -12,8 +12,9 @@ module.exports = function(app, callbackIn){
     var password = 'Asdfasdf';
     var user;
     var feed;
+    var posts;
     var userFeeds;
-
+    
     var cookieJar = request.jar();
 
     async.series([
@@ -73,7 +74,7 @@ module.exports = function(app, callbackIn){
 
             request.post({uri: rootUrl + '/feed',
                          jar: cookieJar,
-                         form: {url: TEST_FEED}, },
+                         form: {url: TEST_FEED}},
                         function(err, httpResponse, body){
 
                 if( err ){ callback(err);
@@ -93,12 +94,41 @@ module.exports = function(app, callbackIn){
                 if( err ){ return callback(err); }
                 body = JSON.parse(body);
                 assert(body.status === 'success');
+                posts = body.posts;
                 assert(body.posts.length > 0);
                 callback();
             });
         },
 
-        // log feed read...
+        // add feeds to user log
+        function(callback){
+            request.post({  uri: rootUrl + '/log',
+                            form: {posts: [posts[0]['id'], posts[1]['id']]},
+                            jar: cookieJar  },
+                        function(err, httpResponse, body){
+
+                if( err ){ return callback(err); }
+                body = JSON.parse(body);
+                assert(body.status === 'success');
+                callback();
+            });
+        },
+
+        // confirm log records added
+        function(callback){
+
+            request.get({  uri: rootUrl + '/log',
+                           jar: cookieJar  },
+                        function(err, httpResponse, body){
+                if( err ){ return callback(err); }
+                body = JSON.parse(body);
+                assert(body.status === 'success');
+                assert(body.logs.length === 2);
+                assert(body.logs[0] === posts[0]['id'] ||
+                       body.logs[1] === posts[0]['id']);
+                callback();
+            });
+        },
 
         // get feeds
         function(callback){

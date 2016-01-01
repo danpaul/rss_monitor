@@ -23,6 +23,7 @@ Prod: NODE_ENV=production node index.js
 * confirm feed exists in user.addFeed
 * replace all UI alerts with styled UI component
 * validate post fields before they get added to DB
+* improve efficiency of models.userPostLog.addMultiple
 
 ## NOTE
 fix address already in use error: `killall -9 node; NODE_ENV=development RUN_TESTS=false gulp`

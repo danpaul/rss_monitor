@@ -50,7 +50,7 @@ module.exports = function(app){
                         if( results.length > 0){
                             callback(null,
                                      { status: 'failure',
-                                       message: 'User with email or username already exists'});
+                                       message: 'User with email already exists'});
                         } else {
                             callback(null, { status: 'success' });
                         }

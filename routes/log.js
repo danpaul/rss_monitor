@@ -14,12 +14,25 @@ module.exports = function(app){
             return res.json({status: 'success', logs: logs});
         });
     });
+    /**
+        Required:
+            Either:
+                req.body.postId (single ID)
+                req.body.posts (an array of IDs)
+
+    */
     route.post('/', function(req, res){
         if( !auth.check(req, res) ){ return; }
         var userId = auth.getUserId(req);
-        var postId = req.params.postId;
-        if( !postId ){ return res.json(errors.invalidPost); }
-        models.userPostLog.add({userId: userId, postId: postId},
+
+        if( req.body.postId ){
+            var posts = [req.body.postId];
+        } else {
+            var posts = req.body.posts;
+        }
+        if( !posts ){ return res.json(errors.invalidParameters); }
+
+        models.userPostLog.addMultiple({userId: userId, posts: posts},
                                function(err, logs){
             if( err ){ return res.json(errors.server); }
             return res.json({status: 'success'});

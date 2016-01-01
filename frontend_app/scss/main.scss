@@ -1,3 +1,41 @@
 @import "vendor/normalize";
 @import "vendor/kube";
 
+row.centered {
+    -webkit-justify-content: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+}
+
+.wrapper{
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+.centered-form{
+    margin: 0 auto;
+}
+
+.form-wrapper{
+    max-width: 365px;
+    margin: 0 auto;
+    margin-top: 20px;
+}
+
+.button-logout{
+    float: right;
+}
+
+.hidden{
+    display: none;
+}
+
+a:hover{
+    cursor: pointer;
+}
+
+.closeX{
+    position: absolute;
+    top: -1px;
+    left: 2px;
+}

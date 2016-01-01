@@ -8,7 +8,7 @@ var UserPosts = React.createClass({
     page: 1,
     settings: {
         minPostsInQueue: 40,
-        postsPerPage: 10
+        postsPerPage: 20
     },
     getInitialState: function(){
         return {

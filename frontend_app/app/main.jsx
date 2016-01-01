@@ -42,11 +42,19 @@ var Controller = React.createClass({
             login: function(options){
                 services.login(options, function(resp){
                     if( resp.status === 'success' ){
-                        // load user posts
+                        self.setState({ visible: 'mainUser' });
                     } else {
                         self.setState({ showNotice: 'true',
                                         noticeMessage: resp.message });
                     }
+                });
+            },
+            logout: function(options){
+                services.logout(function(resp){
+                    if( resp.status !== 'success' ){
+                        return alert(resp.message);
+                    }
+                    window.location.reload();
                 });
             },
             register: function(options){
@@ -54,7 +62,10 @@ var Controller = React.createClass({
                     if( resp.status === 'success' ){
                         self.setState({ showNotice: 'true',
                                         noticeMessage: 'Success!!! Please login',
-                                        visible: 'login' });
+                                        alertType: 'success',
+                                        visible: 'login' }, function(){
+                            self.setState({alertType: null})
+                        });
                     } else {
                         self.setState({ showNotice: 'true',
                                         noticeMessage: resp.message });
@@ -79,11 +90,12 @@ var Controller = React.createClass({
 
     render: function(){
         var self = this;
-        return <div>
+        return <div className="wrapper">
             <Notice
                 visible={this.state.showNotice}
                 message={this.state.noticeMessage}
-                actionHandler={this.actionHandler} />
+                actionHandler={this.actionHandler}
+                alertType={this.state.alertType} />
             <Loading
                 visible={this.state.visible === 'loading'} />
             <LoginForm
@@ -96,8 +108,7 @@ var Controller = React.createClass({
                 visible={this.state.visible === 'mainUser'}
                 actionHandler={this.actionHandler}
                 services={services} />
-        </div>;
-
+        </div>
     }
 });
 

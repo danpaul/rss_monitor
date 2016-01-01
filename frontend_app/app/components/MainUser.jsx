@@ -17,7 +17,8 @@ var MainUser = React.createClass({
         return <div>
             <UserMenu
                 selected={this.state.visible}
-                handleMenuSelect={this.handleMenuSelect} />
+                handleMenuSelect={this.handleMenuSelect}
+                actionHandler={this.props.actionHandler} />
             <UserFeedTab
                 visible={this.state.visible === 'feeds'}
                 services={this.props.services} />

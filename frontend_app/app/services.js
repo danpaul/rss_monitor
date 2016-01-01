@@ -47,6 +47,12 @@ services.login = function(options, callback){
                          {email: options.email, password: options.password},
                          callback);
 }
+services.logout = function(callback){
+    services.makeRequest('POST',
+                         config.rootUrl + '/user/logout',
+                         null,
+                         callback);
+}
 services.register = function(options, callback){
     services.makeRequest('POST',
                          config.rootUrl + '/user',
