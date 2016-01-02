@@ -5,10 +5,13 @@
         - lastUpdate
 */
 var _ = require('underscore');
+var async = require('async');
 var BaseModel = require('../lib/rethink_base_model');
 var debug = require('debug')('rss_monitor');
 var errors = require('../lib/errors');
+var feed = require('feed-read');
 var rssReadFeed = require('../lib/rss_read_feed');
+var validUrl = require('valid-url');
 
 module.exports = function(app){
 
@@ -23,6 +26,10 @@ module.exports = function(app){
     // defines the rethink indexes
     model.indexes = ['url', 'active'];
 
+    model.settings = {
+        intervalbetweenFeeds: 1000
+    }
+
     var feedMonitorInterval = app.settings.feedMonitorInterval;
     var intervals = {};
 
@@ -33,28 +40,26 @@ module.exports = function(app){
                 if( err ){ return callback(err); }
                 model.readFeed(feed);
                 model.setInterval(feed);
-                return callback();
+                callback();
             });
         });
     }
 
-    model.turnOnFeeds = function(callback){
-        this.filter({row: 'active', value: true}, function(err, result){
-
+    model.turnOnFeeds = function(callbackIn){
+        var self = this;
+        this.filter({row: 'active', value: true}, function(err, feeds){
+            if( err ){ return callbackIn(err); }
+            async.eachSeries(feeds, function(feed, callback){
+                self.setInterval(feed);
+                setTimeout(callback, self.settings.intervalbetweenFeeds)
+            }, callbackIn);
         });
-    }
-
-    model.clearInterval = function(id){
-        if( intervals[id] ){
-            clearInterval(intervals[id]);
-            delete intervals[id];
-        }
     }
 
     /**
         Required:
             feedObject.url
-        Passes back new or existing object
+        Passes back new or existing object wrapppend in response object
     */
     model.createIfNew = function(feedObject, callback){
         var self = this;
@@ -66,20 +71,40 @@ module.exports = function(app){
             }
             if( result.length > 0 ){
                 return callback(null, {status: 'success', feed: result[0]});
-            } 
-            self.create(feedObject, function(err, newFeed){
-                if( err ){ return callback(err); }
-                return callback(null, {status: 'success', feed: newFeed});
-            });
+            }
+            // validate URL
+            if( !validUrl.isUri(feedObject.url) ){
+                return(callback(null,
+                                {   status: 'failure',
+                                    message: 'URL is not valid' }));
+            }
+            // test URL
+            self.feedIsValid(feedObject.url, function(err, isValid){
+                if( err ){
+                    return callback(errors.server);
+                }
+                if( !isValid ){
+                    return callback(null, errors.invalidFeed);
+                }
 
+                // create
+                self.create(feedObject, function(err, newFeed){
+                    if( err ){
+                        console.log(5);
+                        return callback(err);
+                    }
+                    return callback(null, {status: 'success', feed: newFeed});
+                });
+
+            })
         });
-    };
+    }
 
-    model._feedIsValid = function(url, callback){
-        // Todo: implement
-        callback(null, true);
-        // error callback:
-        // callback(errors.invalidFeed)
+    model.feedIsValid = function(url, callback){
+        feed(url, function(err, posts){
+            if(err){ return callback(null, false); }
+            return callback(null, true)
+        });
     }
 
     model.readFeed = function(feed){
@@ -96,9 +121,16 @@ module.exports = function(app){
         });
     }
 
+    model.clearInterval = function(id){
+        if( intervals[id] ){
+            clearInterval(intervals[id]);
+            delete intervals[id];
+        }
+    }
 
     model.setInterval = function(feed){
         var self = this;
+        this.clearInterval(feed.id);
         intervals[feed.id] = setInterval(function(){
             self.readFeed(feed);
         }, feedMonitorInterval)

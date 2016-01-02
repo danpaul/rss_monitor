@@ -1,8 +1,10 @@
 var assert = require('assert');
 var async = require('async');
+var feed = require("feed-read");
 
 var TEST_FEED = 'https://www.reddit.com/.rss';
 var TEST_FEED_02 = 'http://www.nytimes.com/services/xml/rss/nyt/US.xml';
+var BAD_FEED = 'http://example.org/';
 
 module.exports = function(app, callbackIn){
 
@@ -43,11 +45,18 @@ module.exports = function(app, callbackIn){
         },
         // activate
         function(callback){
-            feedModel.activate(feed.id, callback);
-        },
-        // activate
-        function(callback){
             feedModel.activate(feed2.id, callback);
+        },
+        // create
+        function(callback){
+            feedModel.createIfNew({url: BAD_FEED}, function(err, resp){
+                if( err ){
+                    callback(err); 
+                } else {
+                    assert(resp.status === 'failure');
+                    callback();                    
+                }
+            });
         },
         // wait
         function(callback){
