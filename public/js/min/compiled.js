@@ -207,8 +207,6 @@ var Post = React.createClass({displayName: "Post",
         });
     },
     render: function(){
-console.log(this.props.post)
-
         var img = ' ';
         if( this.props.post.postImage ){
             img = React.createElement("img", {src: this.props.post.postImage})
@@ -585,7 +583,7 @@ if( config.env === 'dev' ){
     config.debug = true;
 } else {
     config.rootUrl = '';
-    config.rootUrl = 'http://159.203.131.38:8000/';
+    config.rootUrl = 'http://159.203.131.38:8000';
     config.debug = false;
 }
 

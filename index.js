@@ -90,8 +90,6 @@ r.connect(config.rethink, function(err, conn) {
         app.models.feed.turnOnFeeds(function(err){ if( err ){ throw(err); } })
 
         var server = app.listen(config.port, function () {
-            // app.config.rootUrl = 'http://' + server.address().address +
-            //                       ':' + server.address().port;
 
             console.log("Example app listening at ", app.config.rootUrl);
             /*******************************************************************
