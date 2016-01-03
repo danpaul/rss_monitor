@@ -12,6 +12,7 @@ Front end dev: NODE_ENV=development RUN_TESTS=false gulp
 Prod: NODE_ENV=production SESSION_SECRET=... COOKIE_SECRET=... node index.js
 
 ## TODO
+* validate GUID
 * Add date and source to posts
 * Add channel info and image image and post image
 * Review query in models.post.getFromFeeds

@@ -91,7 +91,7 @@ r.connect(config.rethink, function(err, conn) {
 
         var server = app.listen(config.port, function () {
 
-            console.log("Example app listening at ", app.config.rootUrl);
+            console.log("RSS Monitor listening at ", app.config.rootUrl);
             /*******************************************************************
 
                             RUN TESTS
