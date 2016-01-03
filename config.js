@@ -7,6 +7,7 @@ if( config.environment === 'development' ){
 
     config.sessionSecret = 'super secret';
     config.cookieSecret = 'super secret';
+    config.rootUrl = 'http://localhost:3000';
     config.port = 3000;
     config.rethink = {
         db: 'rss_monitor',
@@ -17,6 +18,7 @@ if( config.environment === 'development' ){
     config.sessionSecret = process.env.SESSION_SECRET;
     config.cookieSecret = process.env.COOKIE_SECRET;
     config.port = 8000;
+    config.rootUrl = 'http://159.203.131.38:8000';
     config.rethink = {
         db: 'rss_monitor',
         host: '127.0.0.1',

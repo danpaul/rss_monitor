@@ -13,8 +13,6 @@ var Post = React.createClass({
         });
     },
     render: function(){
-console.log(this.props.post)
-
         var img = ' ';
         if( this.props.post.postImage ){
             img = <img src={this.props.post.postImage} />
