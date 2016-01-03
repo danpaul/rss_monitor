@@ -207,13 +207,27 @@ var Post = React.createClass({displayName: "Post",
         });
     },
     render: function(){
-        // var htmlDiv = {__html: this.props.post.summary};
-        // <div dangerouslySetInnerHTML={htmlDiv} />
-        return React.createElement("div", null, 
-            React.createElement("a", {
-                href: this.props.post.link, 
-                target: "_blank"}, 
-                React.createElement("h4", null, this.props.post.title)
+console.log(this.props.post)
+
+        var img = ' ';
+        if( this.props.post.postImage ){
+            img = React.createElement("img", {src: this.props.post.postImage})
+        }
+
+        return React.createElement("row", null, 
+            React.createElement("column", {cols: "2", className: "post-image-wrap"}, 
+                React.createElement("a", {
+                    href: this.props.post.link, 
+                    target: "_blank"}, 
+                    img
+                )
+            ), 
+            React.createElement("column", {cols: "10"}, 
+                React.createElement("a", {
+                    href: this.props.post.link, 
+                    target: "_blank"}, 
+                    React.createElement("h4", null, this.props.post.title)
+                )
             )
         );
     }

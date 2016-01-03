@@ -1,5 +1,7 @@
 var BaseModel = require('../lib/rethink_base_model');
 var cache = require('memory-cache');
+var cheerio = require('cheerio');
+var errors = require('../lib/errors');
 var r = require('rethinkdb');
 
 var DEFAULT_CACHE_TIME = 1000 * 60 * 60 * 6; //6 hours
@@ -34,6 +36,14 @@ module.exports = function(app){
             callback();
             return;
         }
+
+        // validate post
+        if( !this.validatePost(feedData) ){
+            return callback(null, errors.invalidPost);
+        }
+
+        // format post
+        this.formatPost(feedData);
 
         // check if already in DB
         this.hasItem({row: 'guid', value: feedData.guid}, function(err, hasItem){
@@ -82,5 +92,31 @@ module.exports = function(app){
             } else { callback(null, result); }
         })
     }
+
+    model.validatePost = function(post){
+        if( !post ||
+            !post.title ||
+            !post.description ){ return false; }
+        return true;
+    }
+
+    model.formatPost = function(post){
+        var image = '';
+        if( post.image &&
+            post.image.url ){
+            image = post.image.url;
+        } else {
+            image = this.getImage(post.description);
+        }
+        post.postImage = image;
+    }
+
+    model.getImage = function(htmlString){
+        var $ = cheerio.load(htmlString);
+        var imgSrc = $('img').attr('src');
+        if( !imgSrc ){ imgSrc = ''; }
+        return imgSrc;
+    }
+
     return model;
 }

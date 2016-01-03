@@ -12,6 +12,8 @@ Front end dev: NODE_ENV=development RUN_TESTS=false gulp
 Prod: NODE_ENV=production node index.js
 
 ## TODO
+* Add date and source to posts
+* Add channel info and image image and post image
 * Review query in models.post.getFromFeeds
 * Turn on feed monitors on startup
 * Delete test monitors/feeds
