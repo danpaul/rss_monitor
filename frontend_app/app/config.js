@@ -8,6 +8,7 @@ if( config.env === 'dev' ){
     config.debug = true;
 } else {
     config.rootUrl = '';
+    config.rootUrl = 'http://159.203.131.38:8000/';
     config.debug = false;
 }
 
