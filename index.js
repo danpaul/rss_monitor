@@ -63,9 +63,6 @@ r.connect(config.rethink, function(err, conn) {
         app.models[model.name] = model;
     })
 
-    // activate feeds
-    app.models.feed.turnOnFeeds(function(err){ if( err ){ throw(err); } })
-
     _.each(fs.readdirSync('./routes'), function(file){
         var routePath = '/' + file.replace(/\.[^/.]+$/, "") + '/';
         app.use(routePath, require('./routes/' + file)(app));
@@ -88,6 +85,9 @@ r.connect(config.rethink, function(err, conn) {
                     START SERVER
 
         ***********************************************************************/
+
+        // activate feeds
+        app.models.feed.turnOnFeeds(function(err){ if( err ){ throw(err); } })
 
         var server = app.listen(config.port, function () {
             app.config.rootUrl = 'http://' + server.address().address +
