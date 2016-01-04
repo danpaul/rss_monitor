@@ -1,3 +1,4 @@
+var _ = require('underscore');
 var assert = require('assert');
 var async = require('async');
 var config = require('../config');
@@ -51,6 +52,63 @@ module.exports = function(app, callbackIn){
                 }
             });
         },
+        // add tags
+        function(callback){
+            // tag too short
+            userModel.addTag({tagName: 'a', userId: user.id}, function(err, resp){
+                if( err ){ return callback(err); }
+                assert(resp.status === 'failure');
+                // tag too long
+                userModel.addTag({  tagName: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+                                    userId: user.userId},
+                                 function(err, resp){
+                    if( err ){ return callback(err); }
+                    assert(resp.status === 'failure');
+                    userModel.addTag({tagName: 'TEST_TAG', userId: user.id},
+                                     function(err, resp){
+                        if( err ){ return callback(err); }
+                        assert(resp.status === 'success');
+                        callback();
+                    });
+                });
+            })
+        },
+        // confirm updated
+        function(callback){
+            userModel.get(user.id, function(err, user){
+                if( err ){ return callback(err); }
+                assert(_.isArray(user.tags['TEST_TAG']));
+                callback();
+            })
+        },
+        // add feed to tag
+        function(callback){
+            userModel.addFeedToTag({    userId: user.id,
+                                        tagName: 'TEST_TAG',
+                                        feedId: testData.feed.id}, function(err, resp){
+                assert(resp.status === 'success');
+                callback();
+            });
+        },
+        // confirm feed added to tag
+        function(callback){
+            userModel.getPublicUser(user.id, function(err, resp){
+                if( err ){ return callback(err); }
+                assert(resp.user.tags['TEST_TAG'][0] === testData.feed.id);
+                callback();
+            });
+        },
+
+        // get posts by tags
+        function(callback){
+            userModel.getPosts({userId: user.id, tags: ['TEST_TAG']},
+                               function(err, posts){
+                if( err ){ return callback(err); }
+                assert(posts.length > 0);
+                callback();
+            });
+        },
+
         // add feed
         function(callback){
             userModel.addFeed({userId: user.id, feedId: testData.feed.id},
@@ -86,6 +144,23 @@ module.exports = function(app, callbackIn){
         function(callback){
             checkLogs(1, callback);
         },
+        
+        // remove feed
+        function(callback){
+            models.user.removeFeed({userId: user.id, feedId: testData.feed.id},
+                                   callback);
+        },
+
+        // confirm feed is removed and removed from tag
+        function(callback){
+            models.user.get(user.id, function(err, user){
+                if( err ){ return callback(err); }
+                assert(!_.contains(user.tags['TEST_TAG'], testData.feed.id));
+                assert(!_.contains(user.feeds, testData.feed.id));
+                callback();
+            })
+        },
+
         // test clear functionality only in development
         function(callback){
             if( !(config.environment === 'development') ){

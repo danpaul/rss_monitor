@@ -1,5 +1,6 @@
 var _ = require('underscore');
 var BaseModel = require('../lib/rethink_base_model');
+var errors = require('../lib/errors');
 var r = require('rethinkdb');
 var password = require('../lib/password');
 
@@ -8,12 +9,16 @@ module.exports = function(app){
     var model = new BaseModel(this, app, __filename);
 
     // set model defaults
-    model.defaults  = {username: null, email: '', password: '', feeds: []}
+    model.defaults  = { username: null,
+                        email: '',
+                        password: '',
+                        feeds: [],
+                        tags: {}    };
 
     // defines the rethink indexes
     model.indexes = ['username', 'email'];
 
-    model.publicFields = ['id', 'email', 'feeds'];
+    model.publicFields = ['id', 'email', 'feeds', 'tags'];
 
     var models = app.models;
 
@@ -59,6 +64,129 @@ module.exports = function(app){
             });
     }
 
+    model.createNew = function(userObject, callback){
+        var self = this;
+        this.validateNewUser(userObject, function(err, resp){
+            if( err ){
+                callback(err);
+                return;
+            }
+            if( resp.status !== 'success' ){
+                callback(null, resp);
+                return;
+            }
+            password.encryptPassword(userObject.password,
+                                     function(err, hashedPassword){
+                if( err ){ return callback(err); }
+                userObject.password = hashedPassword;
+                self.create(userObject, function(err, newUser){
+                    if( err ){ return callback(err); }
+                    callback(null, {status: 'success',
+                                    user: self.getPublic(newUser)});
+                });
+            });
+        });
+    }
+
+    /**
+        Required:
+            options.email
+            options.password
+            options.req
+    */
+    model.login = function(options, callback){
+        var self = this;
+        var failure = {status: 'failure',
+                       message: 'Email or password is not correct'};
+        this.getByEmail(options, function(err, user){
+            if( err ){ return callback(err); }
+            if( user === null ){ return callback(null, failure); }
+            password.comparePasswords(options.password,
+                                      user.password,
+                                      function(err, isMatch){
+                    if( err ){ return callback(err); }
+                    if( !isMatch ){ return callback(null, failure) }
+                    return callback(null,
+                                    {   status: 'success',
+                                        user: self.getPublic(user)  });
+            });
+        })
+    }
+
+    /**
+        Required:
+            options.email
+    */
+    model.getByEmail = function(options, callback){
+        this.filter({row: 'email', value: options.email}, function(err, rows){
+            if( err ){ return callback(err); }
+            if( rows.length !== 1 ){
+                return callback(null, null);
+            }
+            return callback(null, rows[0]);
+        });
+    }
+
+    model.getPublicUser = function(userId, callback){
+        var self = this;
+        this.get(userId, function(err, user){
+            if( err ){ return callback(err); }
+            if( !user ){
+                return callback(null,
+                                {status: 'failure', message: 'No user found'});
+            }
+            callback(null, {status: 'success', user: self.getPublic(user)});
+        });
+    }
+
+/*******************************************************************************
+
+                POSTS
+
+*******************************************************************************/
+
+    /**
+        Required:
+            options.userId
+        Optional:
+            options.page
+            options.tags (an array of user tag names)
+    */
+    model.getPosts = function(options, callback){
+        var self = this;
+        var page = options.page ? options.page : 1;
+        this.get(options.userId, function(err, user){
+            if( err ){
+                callback(err);
+                return;
+            }
+            if( user.feeds.length === 0 ){
+                callback(null, []);
+                return;
+            }
+            var feedIds = user.feeds;
+            if( options.tags ){
+                feedIds = [];
+                _.each(options.tags, function(tag){
+                    if( user.tags[tag] ){
+                        feedIds = feedIds.concat(user.tags[tag]);
+                    }
+                });
+                feedIds = _.uniq(feedIds);
+            }
+
+            models.post.getFromFeeds({feedIds: feedIds, page: page},
+                                     callback);
+        });
+    }
+
+
+/*******************************************************************************
+
+                FEEDS
+
+*******************************************************************************/
+
     /**
         Required:
             options.userId
@@ -103,6 +231,13 @@ module.exports = function(app){
             user.feeds = _.filter(user.feeds, function(feedId){
                 return feedId !== options.feedId;
             })
+            // remove from tags
+            user.tags = _.map(user.tags, function(feedIds){
+                return _.filter(feedIds, function(feedId){
+                    return feedId !== options.feedId;
+                })
+            })
+
             self.update(user, function(err){
                 if( err ){ callback(err); }
                 else{ callback(); }
@@ -110,102 +245,79 @@ module.exports = function(app){
         })
     }
 
+/*******************************************************************************
 
-    model.createNew = function(userObject, callback){
-        var self = this;
-        this.validateNewUser(userObject, function(err, resp){
-            if( err ){
-                callback(err);
-                return;
-            }
-            if( resp.status !== 'success' ){
-                callback(null, resp);
-                return;
-            }
-            password.encryptPassword(userObject.password,
-                                     function(err, hashedPassword){
-                if( err ){ return callback(err); }
-                userObject.password = hashedPassword;
-                self.create(userObject, function(err, newUser){
-                    if( err ){ return callback(err); }
-                    callback(null, {status: 'success',
-                                    user: self.getPublic(newUser)});
-                });
-            });
-        });
-    }
+                TAGS
+
+*******************************************************************************/
 
     /**
         Required:
             options.userId
-        Optional:
-            options.page
+            options.tagName
     */
-    model.getPosts = function(options, callback){
+    model.addTag = function(options, callback){
         var self = this;
-        var page = options.page ? options.page : 1;
-        this.get(options.userId, function(err, user){
-            if( err ){
-                callback(err);
-                return;
-            }
-            if( user.feeds.length === 0 ){
-                callback(null, []);
-                return;
-            }
-            models.post.getFromFeeds({feedIds: user.feeds, page: page},
-                                     callback);
-        });
-    }
-
-    /**
-        Required:
-            options.email
-            options.password
-            options.req
-    */
-    model.login = function(options, callback){
-        var self = this;
-        var failure = {status: 'failure',
-                       message: 'Email or password is not correct'};
-        this.getByEmail(options, function(err, user){
+        if( !self._tagIsValid(options.tagName) ){
+            return callback(null, errors.invalidTag);
+        }
+        self.get(options.userId, function(err, user){
             if( err ){ return callback(err); }
-            if( user === null ){ return callback(null, failure); }
-            password.comparePasswords(options.password,
-                                      user.password,
-                                      function(err, isMatch){
-                    if( err ){ return callback(err); }
-                    if( !isMatch ){ return callback(null, failure) }
-                    return callback(null, {status: 'success', user: self.getPublic(user) });
+            if( user.tags[options.tagName] ){
+                return callback(null, {status: 'success'});
+            }
+            user.tags[options.tagName] = [];
+            self.update(user, function(err){
+                if( err ){ return callback(err); }
+                callback(null, {status: 'success'})
             });
-        })
+        });
     }
 
     /**
-        Required:
-            options.email
+        Required
+            options.userId
+            options.tagName
+            options.feedId
     */
-    model.getByEmail = function(options, callback){
-        this.filter({row: 'email', value: options.email}, function(err, rows){
+    model.addFeedToTag = function(options, callback){
+        var self = this;
+        self.get(options.userId, function(err, user){
             if( err ){ return callback(err); }
-            if( rows.length !== 1 ){
-                return callback(null, null);
+
+            // confirm tag exists
+            if( !_.isArray(user.tags[options.tagName]) ){
+                return callback(null, errors.tagDoesNotExist);
             }
-            return callback(null, rows[0]);
+
+            // if user does not already have feed, add it
+            if( !_.contains(user.feeds, options.feedId) ){
+                user.feeds.push(options.feedId);
+            }
+
+            user.tags[options.tagName].push(options.feedId);
+            self.update(user, function(err){
+                if( err ){ return callback(err); }
+                callback(null, {status: 'success'});
+            });
         });
     }
 
-    model.getPublicUser = function(userId, callback){
-        var self = this;
-        this.get(userId, function(err, user){
-            if( err ){ return callback(err); }
-            if( !user ){
-                return callback(null,
-                                {status: 'failure', message: 'No user found'});
-            }
-            callback(null, {status: 'success', user: self.getPublic(user)});
-        });
+    model._tagIsValid = function(tagName){
+        if( !tagName ||
+            !tagName.length ||
+            tagName.length < 2 ||
+            tagName.length > 32 ){ return false; }
+        return true;
     }
+
+
+
+/*******************************************************************************
+
+                HELPERS
+
+*******************************************************************************/
 
     model._emailIsValid = function(email){
         var re = /\S+@\S+\.\S+/;

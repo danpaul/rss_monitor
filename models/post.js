@@ -79,9 +79,16 @@ module.exports = function(app){
         var sliceEnd = page * this.settings.sliceSize - 1;
 
         // Todo: improve this query
-        var query = r.table(this.name)
-                        .getAll(r.args(options.feedIds), {index: 'feedId'})
-                        .orderBy('timestamp');
+        var query = r.table(this.name);
+
+        if( options.feedIds.length === 0 ){ return callback(null, []); }
+        if( options.feedIds.length > 1 ){
+            query = query.getAll(r.args(options.feedIds), {index: 'feedId'})
+        } else {
+            query = query.getAll(options.feedIds[0], {index: 'feedId'})
+        }
+
+        query = query.orderBy('timestamp');
 
         if( !options.unlimit || options.unlimit !== true ){
             query = query.slice(sliceStart, sliceEnd);

@@ -7,9 +7,13 @@ Setup and start Rethink for your local system.
 
 ## TO RUN
 Dev with Nodemon: NODE_ENV=development nodemon index.js
+
 Dev without Nodemon: NODE_ENV=development node index.js
+
 Front end dev: NODE_ENV=development RUN_TESTS=false gulp
+
 Prod: NODE_ENV=production SESSION_SECRET=... COOKIE_SECRET=... node index.js
+
 
 ## TODO
 * validate GUID
