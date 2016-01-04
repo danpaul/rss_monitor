@@ -275,6 +275,28 @@ module.exports = function(app){
     }
 
     /**
+        Required:
+            options.userId
+            options.tagName
+    */
+    model.removeTag = function(options, callback){
+        var self = this;
+        self.get(options.userId, function(err, user){
+            if( err ){ return callback(err); }
+            if( !user.tags[options.tagName] ){
+                return callback(null, {status: 'success'});
+            }
+            user.tags = _.filter(user.tags, function(feeds, tagName){
+                return tagName !== options.tagName;
+            });
+            self.update(user, function(err){
+                if( err ){ return callback(err); }
+                callback(null, {status: 'success'})
+            });
+        });
+    }
+
+    /**
         Required
             options.userId
             options.tagName

@@ -68,7 +68,6 @@ module.exports = function(app, callbackIn){
             });
         },
 
-
         // add feed
         function(callback){
 
@@ -81,6 +80,7 @@ module.exports = function(app, callbackIn){
                 } else {
                     body = JSON.parse(body);
                     assert(body.status === 'success');
+
                     setTimeout(callback, 1000);
                 }
             });
@@ -100,7 +100,7 @@ module.exports = function(app, callbackIn){
             });
         },
 
-        // add feeds to user log
+        // add posts to user log
         function(callback){
             request.post({  uri: rootUrl + '/log',
                             form: {posts: [posts[0]['id'], posts[1]['id']]},
@@ -141,6 +141,75 @@ module.exports = function(app, callbackIn){
                 assert(body.feeds.length > 0);
                 userFeeds = body.feeds;
                 callback();
+            });
+        },
+
+        // add user tag
+        function(callback){
+            request.post({  uri: rootUrl + '/user/tag',
+                            jar: cookieJar,
+                            form: {tag: 'TEST_TAG'} },
+                        function(err, httpResponse, body){
+                if( err ){ return callback(err); }
+                body = JSON.parse(body);
+                assert(body.status === 'success');
+                callback();
+            });
+        },
+
+        // add feed to tag
+        function(callback){
+            request.post({  uri: rootUrl + '/user/add-feed-to-tag',
+                            jar: cookieJar,
+                            form: {tag: 'TEST_TAG', feedId: userFeeds[0]}   },
+                        function(err, httpResponse, body){
+                if( err ){ return callback(err); }
+                body = JSON.parse(body);
+                assert(body.status === 'success');
+                callback();
+            });
+        },
+
+        // confirm feed is added to tag
+        function(callback){
+            request.get({uri: rootUrl + '/user', jar: cookieJar },
+                        function(err, httpResponse, body){
+
+                if( err ){ callback(err);
+                } else {
+                    body = JSON.parse(body);
+                    assert(body.status === 'success');
+                    assert(body.user.tags['TEST_TAG'][0] === userFeeds[0]);
+                    callback();
+                }
+            });
+        },
+
+        // remove user tag
+        function(callback){
+            request.post({  uri: rootUrl + '/user/delete-tag',
+                            jar: cookieJar,
+                            form: {tag: 'TEST_TAG'} },
+                        function(err, httpResponse, body){
+                if( err ){ return callback(err); }
+                body = JSON.parse(body);
+                assert(body.status === 'success');
+                callback();
+            });
+        },
+
+        // confirm user tag remove
+        function(callback){
+            request.get({uri: rootUrl + '/user', jar: cookieJar },
+                        function(err, httpResponse, body){
+
+                if( err ){ callback(err);
+                } else {
+                    body = JSON.parse(body);
+                    assert(body.status === 'success');
+                    assert(typeof(body.user.tags['TEST_TAG']) === 'undefined');
+                    callback();
+                }
             });
         },
 

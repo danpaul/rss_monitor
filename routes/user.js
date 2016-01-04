@@ -96,5 +96,40 @@ module.exports = function(app){
         })
     });
 
+    route.post('/tag', function(req, res){
+        if( !auth.check(req, res) ){ return; }
+        var userId = auth.getUserId(req);
+        var tag = req.body.tag ? req.body.tag : '';
+        models.user.addTag({tagName: tag, userId: userId}, function(err, resp){
+            if( err ){ return res.json(errors.server); }
+            res.json(resp);
+        });
+    });
+
+    route.post('/delete-tag', function(req, res){
+        if( !auth.check(req, res) ){ return; }
+        var userId = auth.getUserId(req);
+        var tag = req.body.tag ? req.body.tag : '';
+        models.user.removeTag({tagName: tag, userId: userId}, function(err, resp){
+            if( err ){ return res.json(errors.server); }
+            res.json(resp);
+        });
+    });
+
+    route.post('/add-feed-to-tag', function(req, res){
+        if( !auth.check(req, res) ){ return; }
+        var userId = auth.getUserId(req);
+        var tagName = req.body.tag ? req.body.tag : '';
+        var feedId = req.body.feedId ? req.body.feedId : '';
+
+        models.user.addFeedToTag({  userId: userId,
+                                    tagName: tagName,
+                                    feedId: feedId}, function(err, resp){
+
+            if( err ){ return res.json(errors.server); }
+            return res.json(resp);
+        });
+    });
+
     return route;
 }
