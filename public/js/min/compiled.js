@@ -493,8 +493,13 @@ var UserPosts = React.createClass({displayName: "UserPosts",
                 }
             })
             self.page += 1;
-            if( self.state.visiblePosts.length === 0 ){ self.loadPagePosts(); }
-            if( !self.hasEnoughPostsInQueue() ){ self.loadPagePosts(); }
+            
+            if( self.hasEnoughPostsInQueue() ){
+                self.loadPagePosts();
+            } else {
+                self.loadPosts();
+            }
+
         });
     },
     hasEnoughPostsInQueue: function(){
@@ -579,8 +584,7 @@ config.env = window.location.href.indexOf('localhost:3000') !== -1 ?
                                   'dev' : 'production';
 
 if( config.env === 'dev' ){
-    // config.rootUrl = 'http://localhost:3000';
-    config.rootUrl = 'http://159.203.131.38:8000';
+    config.rootUrl = 'http://localhost:3000';
     config.debug = true;
 } else {
     config.rootUrl = '';

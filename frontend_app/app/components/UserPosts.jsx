@@ -55,8 +55,13 @@ var UserPosts = React.createClass({
                 }
             })
             self.page += 1;
-            if( self.state.visiblePosts.length === 0 ){ self.loadPagePosts(); }
-            if( !self.hasEnoughPostsInQueue() ){ self.loadPagePosts(); }
+            
+            if( self.hasEnoughPostsInQueue() ){
+                self.loadPagePosts();
+            } else {
+                self.loadPosts();
+            }
+
         });
     },
     hasEnoughPostsInQueue: function(){
