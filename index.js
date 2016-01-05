@@ -1,5 +1,6 @@
 var _ = require('underscore');
 var config = require('./config')
+var cors = require('cors');
 var fs = require('fs');
 var r = require('rethinkdb');
 var schemaBuilder = require('./lib/rethink_schema_builder');
@@ -24,6 +25,8 @@ var bodyParser = require('body-parser')
 
 app.use(express.static(__dirname + '/public'));
 
+app.use(cors());
+
 if( USE_SESSIONS ){
     var session = require('express-session')
     app.use(require('cookie-parser')(config.cookieSecret));
@@ -42,13 +45,13 @@ if( USE_SESSIONS ){
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
-// allow CORS
-app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers",
-             "Origin, X-Requested-With, Content-Type, Accept");
-  next();
-});
+// // allow CORS
+// app.use(function(req, res, next) {
+//   res.header("Access-Control-Allow-Origin", "*");
+//   res.header("Access-Control-Allow-Headers",
+//              "Origin, X-Requested-With, Content-Type, Accept");
+//   next();
+// });
 
 /*******************************************************************************
 
