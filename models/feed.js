@@ -131,10 +131,6 @@ module.exports = function(app){
         var self = this;
         this.clearInterval(feed.id);
         intervals[feed.id] = setInterval(function(){
-
-// asdf
-console.log('checking feed', feed.id);
-
             self.readFeed(feed);
         }, feedMonitorInterval)
     }

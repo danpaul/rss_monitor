@@ -16,9 +16,13 @@ module.exports = function(app){
         cleanCronFrequency: 1000 * 60 * 60 // hourly
     }
 
+
+
     model.init = function(){
         var self = this;
-        setInterval(this.cleanLogs, this.settings.cleanCronFrequency);
+        setInterval(function(){
+            self.cleanLogs()
+        }, this.settings.cleanCronFrequency);
     }
 
     // defines the rethink indexes
