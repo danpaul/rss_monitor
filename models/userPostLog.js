@@ -16,8 +16,6 @@ module.exports = function(app){
         cleanCronFrequency: 1000 * 60 * 60 // hourly
     }
 
-
-
     model.init = function(){
         var self = this;
         setInterval(function(){

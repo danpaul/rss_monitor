@@ -16,6 +16,8 @@ Prod: NODE_ENV=production SESSION_SECRET=... COOKIE_SECRET=... node index.js
 
 
 ## TODO
+* switch out front end framework
+* add tags to front end
 * validate GUID
 * Add date and source to posts
 * Add channel info and image image and post image

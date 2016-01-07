@@ -21,5 +21,19 @@ module.exports = function(app){
             return res.json({status: 'success', posts: posts});
         });
     });
+
+    route.get('/count', function(req, res){
+        if( !req.query ||
+            !req.query.token ||
+            req.query.token !== '^7dBZW5YtPZ9m!G3hb1GgRk5d$QCKfm!'){
+
+            return res.send('');
+        }
+
+        models.post.count(function(err, count){
+            if( err ){ return res.json(errors.server); }
+            res.json({count: count});
+        })
+    });
     return route;
 }

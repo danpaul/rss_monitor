@@ -1,6 +1,7 @@
 var BaseModel = require('../lib/rethink_base_model');
 var cache = require('memory-cache');
 var cheerio = require('cheerio');
+var decay = require('decay');
 var errors = require('../lib/errors');
 var r = require('rethinkdb');
 
@@ -10,32 +11,34 @@ var DEFAULT_SLICE_SIZE = 100;
 module.exports = function(app){
 
     var model = new BaseModel(this, app, __filename);
+    var wilsonScore = decay.wilsonScore();
 
     // set model defaults
-    model.defaults  = {defaultField: true}
+    model.defaults  = {ranking: 0.0, upvotes: 0, downvotes: 0}
 
     // defines the rethink indexes
     model.indexes = ['guid', 'feedId', 'timestamp',
-                     {feedId_timestamp: ['feedId', 'timestamp']}];
+                     {feedId_timestamp: ['feedId', 'timestamp']},
+                     {feedId_ranking: ['feedId', 'ranking']}];
 
     model.settings = {
         cacheTime: DEFAULT_CACHE_TIME,
-        sliceSize: DEFAULT_SLICE_SIZE
+        sliceSize: DEFAULT_SLICE_SIZE,
+        decayTime: 1000 * 60 * 60 * 24 * 30 // time for ranking to decay to zero
     };
 
     /**
         required: feedData.guid, feedData.feedId
+
+        Note: new feed object only gets passed back if a new object is created
     */
     model.save = function(feedData, callback){
         var date = new Date(feedData.date);
-        feedData.timestamp = date.getTime();
+        feedData.timestamp = Date.now();
         var self = this;
 
         // if already in cache, do nothing, it's already saved
-        if( cache.get(feedData.guid) ){
-            callback();
-            return;
-        }
+        if( cache.get(feedData.guid) ){ return callback(); }
 
         // validate post
         if( !this.validatePost(feedData) ){
@@ -63,7 +66,7 @@ module.exports = function(app){
                     }
                     // update cache
                     cache.put(feedData.guid, true, model.settings.cacheTime);
-                    callback(null);
+                    callback(null, newObject);
                 });
             }
         });
@@ -103,7 +106,8 @@ module.exports = function(app){
     model.validatePost = function(post){
         if( !post ||
             !post.title ||
-            !post.description ){ return false; }
+            !post.description ||
+            !post.guid ){ return false; }
         return true;
     }
 
@@ -125,5 +129,33 @@ module.exports = function(app){
         return imgSrc;
     }
 
+    /**
+        Required:
+            options.upvote (true if upvote, else false)
+            options.postId
+    */
+    model.vote = function(options, callback){
+        var self = this;
+        this.get(options.postId, function(err, post){
+            if( err ){ return callback(err); }
+
+            if( options.upvote ){ post.upvotes++; }
+            else { post.downvotes++; }
+
+            post.ranking = self.calculateRanking(post.upvotes,
+                                                 post.downvotes,
+                                                 post.timestamp);
+            self.update(post, callback);
+        })
+    }
+
+    // wilson score with a linear decay
+    model.calculateRanking = function(upvotes, downvotes, timestamp){
+        var timeAgo = Date.now() - timestamp;
+        if( timeAgo > this.settings.decayTime ){ return 0; }
+
+        return wilsonScore(upvotes, downvotes) *
+               ( 1 - (timeAgo / this.settings.decayTime) );
+    }
     return model;
 }
