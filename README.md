@@ -16,6 +16,8 @@ Prod: NODE_ENV=production SESSION_SECRET=... COOKIE_SECRET=... node index.js
 
 
 ## TODO
+* info to post: feed, date
+* add feed info
 * switch out front end framework
 * add tags to front end
 * validate GUID

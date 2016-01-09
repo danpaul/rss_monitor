@@ -65,10 +65,7 @@ module.exports = function(app){
         var self = this;
         feedObject.url = this._normalizeUrl(feedObject.url);
         this.filter({row: 'url', value: feedObject.url}, function(err, result){
-            if( err ){
-                callback(err);
-                return;
-            }
+            if( err ){ return callback(err); }
             if( result.length > 0 ){
                 return callback(null, {status: 'success', feed: result[0]});
             }
@@ -89,13 +86,13 @@ module.exports = function(app){
 
                 // create
                 self.create(feedObject, function(err, newFeed){
-                    if( err ){
-                        console.log(5);
-                        return callback(err);
-                    }
-                    return callback(null, {status: 'success', feed: newFeed});
+                    if( err ){ return callback(err); }
+                    self.updateMeta(newFeed.id, function(err){
+                        if( err ){ return callback(err); }
+                        callback(null, {status: 'success', feed: newFeed});
+                    });
                 });
-            })
+            });
         });
     }
 
@@ -103,6 +100,22 @@ module.exports = function(app){
         feed(url, function(err, posts){
             if(err){ return callback(null, false); }
             return callback(null, true)
+        });
+    }
+
+    model.updateMeta = function(feedId, callback){
+        var self = this;
+        this.get(feedId, function(err, feedObj){
+            if( err ){ return callback(err); }
+            feed(feedObj.url, function(err, feedData){
+                if( err ){ return callback(err); }
+                if( feedData.length < 1 ){ return callback(); }
+                var feedMeta = feedData[0]['feed'];
+                if( !feedMeta || !feedMeta.name ){ return(callback); }
+                feedObj.name = feedMeta.name;
+                if( feedMeta.link ){ feedObj.link = feedMeta.link; }
+                self.update(feedObj, callback);
+            });
         });
     }
 
