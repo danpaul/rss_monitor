@@ -82,6 +82,7 @@ module.exports = function(app){
         optional: options.page
     */
     model.getFromFeeds = function(options, callback){
+
         var page = options.page ? options.page : 1;
         var sliceStart = (page - 1) * this.settings.sliceSize;
         var sliceEnd = page * this.settings.sliceSize - 1;

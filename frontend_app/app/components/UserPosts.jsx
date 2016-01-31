@@ -43,7 +43,9 @@ var UserPosts = React.createClass({
                 return alert(resp.message);
             }
             if( resp.posts.length === 0 ){
-                return self.setState({reachedEnd: true});
+                return self.setState({reachedEnd: true}, function(){
+                    self.loadPagePosts();
+                });
             }
             _.each(resp.posts, function(post){
                 if( !self.readPosts[post.id] ){

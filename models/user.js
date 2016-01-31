@@ -174,7 +174,6 @@ module.exports = function(app){
                 });
                 feedIds = _.uniq(feedIds);
             }
-
             models.post.getFromFeeds({feedIds: feedIds, page: page},
                                      callback);
         });
