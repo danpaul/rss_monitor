@@ -17,7 +17,6 @@ var Post = React.createClass({
         if( this.props.post.postImage ){
             img = <img src={this.props.post.postImage} />
         }
-
         return <row>
             <column cols="2" className="post-image-wrap">
                 <a
@@ -32,6 +31,13 @@ var Post = React.createClass({
                     target="_blank">
                     <h4>{this.props.post.title}</h4>
                 </a>
+                <div>
+                    <a
+                        href={this.props.post.feedUrl}
+                        target="_blank">
+                        <h6>{this.props.post.feedName}</h6>
+                    </a>
+                </div>
             </column>
         </row>;
     }

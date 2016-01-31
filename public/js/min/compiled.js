@@ -211,7 +211,6 @@ var Post = React.createClass({displayName: "Post",
         if( this.props.post.postImage ){
             img = React.createElement("img", {src: this.props.post.postImage})
         }
-
         return React.createElement("row", null, 
             React.createElement("column", {cols: "2", className: "post-image-wrap"}, 
                 React.createElement("a", {
@@ -225,6 +224,13 @@ var Post = React.createClass({displayName: "Post",
                     href: this.props.post.link, 
                     target: "_blank"}, 
                     React.createElement("h4", null, this.props.post.title)
+                ), 
+                React.createElement("div", null, 
+                    React.createElement("a", {
+                        href: this.props.post.feedUrl, 
+                        target: "_blank"}, 
+                        React.createElement("h6", null, this.props.post.feedName)
+                    )
                 )
             )
         );
