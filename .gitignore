@@ -10,4 +10,5 @@ Thumbs.db
 
 # Packages
 /node_modules
+/rethinkdb_data
 /secret
