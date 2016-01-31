@@ -18,6 +18,11 @@ var Post = React.createClass({
             img = <img src={this.props.post.postImage} />
         }
         return <row>
+            <column cols="1" className="post-image-wrap">
+                <i className="fa fa-arrow-circle-o-up"></i>
+                <i className="fa fa-arrow-circle-o-up"></i>
+                <i className="fa fa-arrow-circle-o-down"></i>
+            </column>
             <column cols="2" className="post-image-wrap">
                 <a
                     href={this.props.post.link}
@@ -25,7 +30,7 @@ var Post = React.createClass({
                     {img}
                 </a>
             </column>
-            <column cols="10">
+            <column cols="9">
                 <a
                     href={this.props.post.link}
                     target="_blank">

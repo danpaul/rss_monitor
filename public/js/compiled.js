@@ -212,6 +212,11 @@ var Post = React.createClass({displayName: "Post",
             img = React.createElement("img", {src: this.props.post.postImage})
         }
         return React.createElement("row", null, 
+            React.createElement("column", {cols: "1", className: "post-image-wrap"}, 
+                React.createElement("i", {className: "fa fa-arrow-circle-o-up"}), 
+                React.createElement("i", {className: "fa fa-arrow-circle-o-up"}), 
+                React.createElement("i", {className: "fa fa-arrow-circle-o-down"})
+            ), 
             React.createElement("column", {cols: "2", className: "post-image-wrap"}, 
                 React.createElement("a", {
                     href: this.props.post.link, 
@@ -219,7 +224,7 @@ var Post = React.createClass({displayName: "Post",
                     img
                 )
             ), 
-            React.createElement("column", {cols: "10"}, 
+            React.createElement("column", {cols: "9"}, 
                 React.createElement("a", {
                     href: this.props.post.link, 
                     target: "_blank"}, 
