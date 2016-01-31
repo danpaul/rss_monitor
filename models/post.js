@@ -32,10 +32,15 @@ module.exports = function(app){
 
         Note: new feed object only gets passed back if a new object is created
     */
-    model.save = function(feedData, callback){
+    model.save = function(feedData, feed, callback){
+        var self = this;
+
         var date = new Date(feedData.date);
         feedData.timestamp = Date.now();
-        var self = this;
+
+        feedData.feedId = feed.id ? feed.id : '';
+        feedData.feedName = feed.name ? feed.name : '';
+        feedData.feedUrl = feed.url ? feed.url : '';
 
         // if already in cache, do nothing, it's already saved
         if( cache.get(feedData.guid) ){ return callback(); }

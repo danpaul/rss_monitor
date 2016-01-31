@@ -60,7 +60,6 @@ module.exports = function(app, callbackIn){
         },
         // wait
         function(callback){
-            // callback();
             setTimeout(callback, app.settings.feedMonitorInterval + 1000);
         },
         function(callback){

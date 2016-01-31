@@ -18,8 +18,12 @@ Prod: NODE_ENV=production SESSION_SECRET=... COOKIE_SECRET=... node index.js
 ## TODO
 * info to post: feed, date
 * add feed info
-* switch out front end framework
-* add tags to front end
+* toggle to allow view/don't view alread read
+* add saved posts
+* configure save to pocket
+* infinite scroll w/refresh button
+W * switch out front end framework
+W * add tags to front end
 * validate GUID
 * Add date and source to posts
 * Add channel info and image image and post image

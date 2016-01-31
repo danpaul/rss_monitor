@@ -15,7 +15,7 @@ module.exports = function(app, callbackIn){
         // create a test post
         function(callback){
             testPost.guid = "test_post_asdf" + Date.now();
-            models.post.save(testPost, function(err, postIn){
+            models.post.save(testPost, {}, function(err, postIn){
                 if( err ){ return callback(err); }
                 post = postIn;
                 callback();

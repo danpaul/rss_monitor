@@ -80,8 +80,7 @@ module.exports = function(app, callbackIn){
                 } else {
                     body = JSON.parse(body);
                     assert(body.status === 'success');
-
-                    setTimeout(callback, 1000);
+                    setTimeout(callback, 3000);
                 }
             });
         },
@@ -90,7 +89,6 @@ module.exports = function(app, callbackIn){
         function(callback){
             request.get({uri: rootUrl + '/post/user', jar: cookieJar },
                         function(err, httpResponse, body){
-
                 if( err ){ return callback(err); }
                 body = JSON.parse(body);
                 assert(body.status === 'success');

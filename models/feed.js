@@ -77,12 +77,8 @@ module.exports = function(app){
             }
             // test URL
             self.feedIsValid(feedObject.url, function(err, isValid){
-                if( err ){
-                    return callback(errors.server);
-                }
-                if( !isValid ){
-                    return callback(null, errors.invalidFeed);
-                }
+                if( err ){ return callback(errors.server); }
+                if( !isValid ){ return callback(null, errors.invalidFeed); }
 
                 // create
                 self.create(feedObject, function(err, newFeed){
@@ -127,7 +123,7 @@ module.exports = function(app){
                 return;
             }
             feedData.data.feedId = feed.id;
-            models.post.save(feedData.data, function(err){
+            models.post.save(feedData.data, feed, function(err){
                 if( err ){ debug('Error saving post', err); }
             });
         });
