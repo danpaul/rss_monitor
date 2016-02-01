@@ -35,5 +35,18 @@ module.exports = function(app){
             res.json({count: count});
         })
     });
+
+    route.post('/vote', function(req, res){
+        if( !auth.check(req, res) ){ return; }
+        var userId = auth.getUserId(req);
+        var upvote = (req.body.upvote === 'true') ? true : false;
+        models.postVote.vote({  userId: userId,
+                                postId: req.body.postId,
+                                upvote: upvote   },
+                             function(err){
+            if( err ){ return res.json(errors.server); }
+            return res.json({status: 'success'});
+        });
+    })
     return route;
 }

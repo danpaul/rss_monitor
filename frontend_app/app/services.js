@@ -104,4 +104,15 @@ services.addPostsToLog = function(options, callback){
                          {posts: options.posts},
                          callback);
 }
+/**
+    Required:
+        options.upVote (boolean, true if upvote)
+        options.postId
+*/
+services.postVote = function(options, callback){
+    services.makeRequest('POST',
+                         config.rootUrl + '/post/vote',
+                         {postId: options.postId, upvote: options.upvote},
+                         callback);
+}
 module.exports = services;

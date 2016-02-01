@@ -104,6 +104,10 @@ var UserPosts = React.createClass({
             self.loadPagePosts();
         });
     },
+    handleVote: function(postId, isUpvote, callback){
+        this.props.services.postVote({postId: postId, upvote: isUpvote},
+                                     callback);
+    },
     render: function(){
         var self = this;
         var prevButtonProps = {
@@ -122,7 +126,8 @@ var UserPosts = React.createClass({
             {this.state.visiblePosts.map(function(post){
                 return <Post
                     key={post.id}
-                    post={post} />;
+                    post={post}
+                    handleVote={self.handleVote} />;
             })}
             <button{ ...prevButtonProps }>Prev</button>
             <button{ ...nextButtonProps }>Next</button>

@@ -206,16 +206,36 @@ var Post = React.createClass({displayName: "Post",
             self.props.updateFeeds();
         });
     },
+    handleUpVote: function(){
+        this.props.handleVote(this.props.post.id, true, this._voteCallback);
+    },
+    handleDownVote: function(){
+        this.props.handleVote(this.props.post.id, false, this._voteCallback);
+    },
+    _voteCallback: function(err){
+        if( err ){ return alert(err); }
+        alert('vote counted');
+    },
     render: function(){
         var img = ' ';
         if( this.props.post.postImage ){
             img = React.createElement("img", {src: this.props.post.postImage})
         }
         return React.createElement("row", null, 
-            React.createElement("column", {cols: "1", className: "post-image-wrap"}, 
-                React.createElement("i", {className: "fa fa-arrow-circle-o-up"}), 
-                React.createElement("i", {className: "fa fa-arrow-circle-o-up"}), 
-                React.createElement("i", {className: "fa fa-arrow-circle-o-down"})
+            React.createElement("column", {cols: "1", className: "post-vote-wrap"}, 
+                React.createElement("div", null, 
+                    React.createElement("a", {onClick: this.handleUpVote}, 
+                        React.createElement("i", {className: "fa fa-arrow-circle-o-up vote-arrow"})
+                    )
+                ), 
+                React.createElement("div", null, 
+                    this.props.post.ranking
+                ), 
+                React.createElement("div", null, 
+                    React.createElement("a", {onClick: this.handleDownVote}, 
+                        React.createElement("i", {className: "fa fa-arrow-circle-o-down"})
+                    )
+                )
             ), 
             React.createElement("column", {cols: "2", className: "post-image-wrap"}, 
                 React.createElement("a", {
@@ -553,6 +573,10 @@ var UserPosts = React.createClass({displayName: "UserPosts",
             self.loadPagePosts();
         });
     },
+    handleVote: function(postId, isUpvote, callback){
+        this.props.services.postVote({postId: postId, upvote: isUpvote},
+                                     callback);
+    },
     render: function(){
         var self = this;
         var prevButtonProps = {
@@ -571,7 +595,8 @@ var UserPosts = React.createClass({displayName: "UserPosts",
             this.state.visiblePosts.map(function(post){
                 return React.createElement(Post, {
                     key: post.id, 
-                    post: post});
+                    post: post, 
+                    handleVote: self.handleVote});
             }), 
             React.createElement("button", React.__spread({},  prevButtonProps ), "Prev"), 
             React.createElement("button", React.__spread({},  nextButtonProps ), "Next")
@@ -832,6 +857,17 @@ services.addPostsToLog = function(options, callback){
     services.makeRequest('POST',
                          config.rootUrl + '/log',
                          {posts: options.posts},
+                         callback);
+}
+/**
+    Required:
+        options.upVote (boolean, true if upvote)
+        options.postId
+*/
+services.postVote = function(options, callback){
+    services.makeRequest('POST',
+                         config.rootUrl + '/post/vote',
+                         {postId: options.postId, upvote: options.upvote},
                          callback);
 }
 module.exports = services;

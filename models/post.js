@@ -147,7 +147,6 @@ module.exports = function(app){
 
             if( options.upvote ){ post.upvotes++; }
             else { post.downvotes++; }
-
             post.ranking = self.calculateRanking(post.upvotes,
                                                  post.downvotes,
                                                  post.timestamp);

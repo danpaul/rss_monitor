@@ -12,16 +12,36 @@ var Post = React.createClass({
             self.props.updateFeeds();
         });
     },
+    handleUpVote: function(){
+        this.props.handleVote(this.props.post.id, true, this._voteCallback);
+    },
+    handleDownVote: function(){
+        this.props.handleVote(this.props.post.id, false, this._voteCallback);
+    },
+    _voteCallback: function(err){
+        if( err ){ return alert(err); }
+        alert('vote counted');
+    },
     render: function(){
         var img = ' ';
         if( this.props.post.postImage ){
             img = <img src={this.props.post.postImage} />
         }
         return <row>
-            <column cols="1" className="post-image-wrap">
-                <i className="fa fa-arrow-circle-o-up"></i>
-                <i className="fa fa-arrow-circle-o-up"></i>
-                <i className="fa fa-arrow-circle-o-down"></i>
+            <column cols="1" className="post-vote-wrap">
+                <div>
+                    <a onClick={this.handleUpVote}>
+                        <i className="fa fa-arrow-circle-o-up vote-arrow"></i>
+                    </a>
+                </div>
+                <div>
+                    {this.props.post.ranking}
+                </div>
+                <div>
+                    <a onClick={this.handleDownVote}>
+                        <i className="fa fa-arrow-circle-o-down"></i>
+                    </a>
+                </div>
             </column>
             <column cols="2" className="post-image-wrap">
                 <a

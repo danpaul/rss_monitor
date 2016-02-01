@@ -127,6 +127,23 @@ module.exports = function(app, callbackIn){
                 callback();
             });
         },
+        // vote on post
+        function(callback){
+            request.post({  uri: rootUrl + '/post/vote',
+                            form: {postId: posts[0]['id'], upvote: true},
+                            jar: cookieJar  },
+                        function(err, httpResponse, body){
+
+                if( err ){ return callback(err); }
+                // confirm vote counted
+                app.models.post.get(posts[0]['id'], function(err, post){
+                    if( err ){ return callback(err); }
+                    assert((post.ranking > 0),
+                           'Post ranking should be greater than zero.');
+                    callback();
+                });
+            });
+        },
 
         // get feeds
         function(callback){
