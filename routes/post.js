@@ -10,13 +10,18 @@ module.exports = function(app){
 
     /**
         Get user's posts
-        Optional: req.query.page
+        Optional:
+            req.query.page
+            req.query.sortField (date or ranking, ranking is default)
     */
     route.get('/user', function(req, res){
         if( !auth.check(req, res) ){ return; }
         var userId = auth.getUserId(req);
         var page = req.query.page || 1;
-        models.user.getPosts({userId: userId, page: page}, function(err, posts){
+        var sortField = (req.query && req.query === 'date') ? 'date' : 'ranking';
+        models.user.getPosts({userId: userId, page: page, sortField: sortField},
+                             function(err, posts){
+
             if( err ){ return res.json(errors.server); }
             return res.json({status: 'success', posts: posts});
         });

@@ -17,7 +17,7 @@ module.exports = function(app){
     model.defaults  = {ranking: 0.0, upvotes: 0, downvotes: 0}
 
     // defines the rethink indexes
-    model.indexes = ['guid', 'feedId', 'timestamp',
+    model.indexes = ['guid', 'feedId', 'timestamp', 'ranking',
                      {feedId_timestamp: ['feedId', 'timestamp']},
                      {feedId_ranking: ['feedId', 'ranking']}];
 
@@ -79,13 +79,17 @@ module.exports = function(app){
 
     /**
         required: options.feedIds (array)
-        optional: options.page
+        optional:
+            options.page
+            options.sortField (either 'date' or 'ranking')
     */
     model.getFromFeeds = function(options, callback){
 
         var page = options.page ? options.page : 1;
         var sliceStart = (page - 1) * this.settings.sliceSize;
         var sliceEnd = page * this.settings.sliceSize - 1;
+        var sortField = (options.sortField && options.sortField === 'ranking') ?
+                        'ranking' : 'date';
 
         // Todo: improve this query
         var query = r.table(this.name);
@@ -97,7 +101,15 @@ module.exports = function(app){
             query = query.getAll(options.feedIds[0], {index: 'feedId'})
         }
 
-        query = query.orderBy('timestamp');
+        // query = query.orderBy('timestamp');
+        // todo: need more efficient index here
+        if( sortField === 'date' ){
+            // query = query.orderBy({index: r.desc('timestamp')});
+            query = query.orderBy(r.desc('timestamp'));
+        } else {
+            // query = query.orderBy({index: r.desc('ranking')});
+            query = query.orderBy(r.desc('ranking'));
+        }
 
         if( !options.unlimit || options.unlimit !== true ){
             query = query.slice(sliceStart, sliceEnd);
@@ -106,7 +118,7 @@ module.exports = function(app){
         query.run(this.connection, function(err, result){
             if( err ){ callback(err);
             } else { callback(null, result); }
-        })
+        });
     }
 
     model.validatePost = function(post){

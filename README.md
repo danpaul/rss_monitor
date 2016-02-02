@@ -40,6 +40,7 @@ W * add tags to front end
 * validate post fields before they get added to DB
 * improve efficiency of models.userPostLog.addMultiple
 * potentially replace current rss parser with feed-read (callback based and simpler)
+* confirm orderby index is in place for models.post.getFromFeeds query: http://stackoverflow.com/questions/28583653/how-to-use-getall-with-orderby-in-rethinkdb
 
 ## NOTE
 fix address already in use error: `killall -9 node; NODE_ENV=development RUN_TESTS=false gulp`

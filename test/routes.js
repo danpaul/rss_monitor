@@ -1,6 +1,8 @@
 var assert = require('assert');
 var async = require('async');
 var request = require('request');
+var _ = require('underscore');
+
 request.defaults({jar: true});
 
 var TEST_FEED = 'http://rss.cnn.com/rss/cnn_topstories.rss';
@@ -85,7 +87,7 @@ module.exports = function(app, callbackIn){
             });
         },
 
-        // get posts with page number
+        // get posts
         function(callback){
             request.get({uri: rootUrl + '/post/user', jar: cookieJar },
                         function(err, httpResponse, body){
@@ -130,13 +132,13 @@ module.exports = function(app, callbackIn){
         // vote on post
         function(callback){
             request.post({  uri: rootUrl + '/post/vote',
-                            form: {postId: posts[0]['id'], upvote: true},
+                            form: {postId: posts[1]['id'], upvote: true},
                             jar: cookieJar  },
                         function(err, httpResponse, body){
 
                 if( err ){ return callback(err); }
                 // confirm vote counted
-                app.models.post.get(posts[0]['id'], function(err, post){
+                app.models.post.get(posts[1]['id'], function(err, post){
                     if( err ){ return callback(err); }
                     assert((post.ranking > 0),
                            'Post ranking should be greater than zero.');
@@ -158,6 +160,21 @@ module.exports = function(app, callbackIn){
                 callback();
             });
         },
+
+        // THIS TEST DOES NOT WORK AFTER FIRST ITERATION
+        // get posts sorted by ranking
+        // function(callback){
+        //     request.get({   uri: rootUrl + '/post/user',
+        //                     jar: cookieJar,
+        //                     qs: {sortField: 'ranking'}},
+        //                 function(err, httpResponse, body){
+        //         if( err ){ return callback(err); }
+        //         body = JSON.parse(body);
+        //         assert(body.posts[0]['id'] === posts[1]['id'],
+        //                'Second post should be ranked higher than first after vote.')
+        //         callback();
+        //     });
+        // },
 
         // add user tag
         function(callback){

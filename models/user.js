@@ -151,10 +151,13 @@ module.exports = function(app){
         Optional:
             options.page
             options.tags (an array of user tag names)
+            options.sortField (either 'date' or 'ranking')
     */
     model.getPosts = function(options, callback){
         var self = this;
         var page = options.page ? options.page : 1;
+        var sortField = (options.sortField && options.sortField === 'ranking') ?
+                        'ranking' : 'date';
         this.get(options.userId, function(err, user){
             if( err ){
                 callback(err);
@@ -174,7 +177,10 @@ module.exports = function(app){
                 });
                 feedIds = _.uniq(feedIds);
             }
-            models.post.getFromFeeds({feedIds: feedIds, page: page},
+            models.post.getFromFeeds({  feedIds: feedIds,
+                                        page: page,
+                                        sortField: sortField    },
+
                                      callback);
         });
     }
