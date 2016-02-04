@@ -221,6 +221,15 @@ var Post = React.createClass({displayName: "Post",
         if( this.props.post.postImage ){
             img = React.createElement("img", {src: this.props.post.postImage})
         }
+        var pubDate = false;
+        if( this.props.post.pubDate ){
+            var date = new Date(this.props.post.pubDate);
+            var pubDate = date.getFullYear() + '-' +
+                          (date.getMonth() + 1) + '-' +
+                          date.getDay();
+            pubDate = '[' + pubDate + ']';
+        }
+
         return React.createElement("row", null, 
             React.createElement("column", {cols: "1", className: "post-vote-wrap"}, 
                 React.createElement("div", null, 
@@ -251,6 +260,7 @@ var Post = React.createClass({displayName: "Post",
                     React.createElement("h4", null, this.props.post.title)
                 ), 
                 React.createElement("div", null, 
+                    pubDate ? pubDate : '', 
                     React.createElement("a", {
                         href: this.props.post.feedUrl, 
                         target: "_blank"}, 

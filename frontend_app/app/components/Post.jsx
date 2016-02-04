@@ -27,6 +27,15 @@ var Post = React.createClass({
         if( this.props.post.postImage ){
             img = <img src={this.props.post.postImage} />
         }
+        var pubDate = false;
+        if( this.props.post.pubDate ){
+            var date = new Date(this.props.post.pubDate);
+            var pubDate = date.getFullYear() + '-' +
+                          (date.getMonth() + 1) + '-' +
+                          date.getDay();
+            pubDate = '[' + pubDate + ']';
+        }
+
         return <row>
             <column cols="1" className="post-vote-wrap">
                 <div>
@@ -57,6 +66,7 @@ var Post = React.createClass({
                     <h4>{this.props.post.title}</h4>
                 </a>
                 <div>
+                    {pubDate ? pubDate : ''}
                     <a
                         href={this.props.post.feedUrl}
                         target="_blank">

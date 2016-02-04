@@ -16,7 +16,7 @@ Prod: NODE_ENV=production SESSION_SECRET=... COOKIE_SECRET=... node index.js
 
 
 ## TODO
-* info to post: feed, date
+x * info to post: feed, date
 * add feed info
 * toggle to allow view/don't view alread read
 * add saved posts
