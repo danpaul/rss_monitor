@@ -1,4 +1,5 @@
 var _ = require('underscore');
+var $ = require('jquery');
 var Post = require('./Post.jsx');
 var React = require('react');
 
@@ -6,17 +7,35 @@ var UserPosts = React.createClass({
     readPosts: {},
     postQueue: [],
     page: 1,
+    isLoading: false,
     settings: {
         minPostsInQueue: 40,
-        postsPerPage: 20
+        postsPerPage: 20,
+        pageBottomeOffset: 100
     },
     getInitialState: function(){
+        window.onscroll = this.handleScroll;    
         return {
             reachedEnd: false,
             visiblePosts: [],
             positionInQueue: 0,
             postPage: 1
         };
+    },
+    handleScroll: function(){
+        var self = this;
+        if($(window).scrollTop() + $(window).height() >
+            $(document).height() - this.settings.pageBottomeOffset) {
+
+            if( this.isLoading ){ return; }
+            this.isLoading = true;
+            this.setState({postPage: this.state.postPage + 1}, function(){                
+                self.loadPagePosts(function(){
+                    self.loadPosts();
+                    self.isLoading = false;
+                });
+            });
+       }
     },
     componentDidMount: function(){
         var self = this;
@@ -73,54 +92,20 @@ var UserPosts = React.createClass({
     },
     loadPagePosts: function(callbackIn){
         var callback = callbackIn || function(){};
-        var nextPosts = this.getNextPostSlice();
-        this.setState({visiblePosts: nextPosts}, callback);
+        var newPosts = this.state.visiblePosts.concat(this.getNextPostSlice());
+        newPosts = _.uniq(newPosts);
+        this.setState({visiblePosts: _.uniq(newPosts)}, callback);
     },
     getNextPostSlice: function(){
         var start = (this.state.postPage - 1) * this.settings.postsPerPage; 
         var end = this.state.postPage * this.settings.postsPerPage;
         return this.postQueue.slice(start, end);
     },
-    handleNextClick: function(){
-        var self = this;
-        var previousPostIds = _.map(this.state.visiblePosts, function(post){
-            return post.id;
-        });
-        this.addPostsToRead(previousPostIds);
-        this.props.services.addPostsToLog({posts: previousPostIds},
-                                          function(resp){
-            if(resp.status !== 'success'){
-                console.log('Error saving postst to log:', resp);
-            }
-        })
-        this.setState({postPage: this.state.postPage + 1}, function(){
-            self.loadPagePosts(self.loadPosts);
-        });
-    },
-    handleBackClick: function(){
-        var self = this;
-        if( this.state.postPage < 2 ){ return; }
-        this.setState({postPage: this.state.postPage - 1}, function(){
-            self.loadPagePosts();
-        });
-    },
     handleVote: function(postId, isUpvote, callback){
         this.props.services.postVote({postId: postId, upvote: isUpvote},
                                      callback);
     },
     render: function(){
-        var self = this;
-        var prevButtonProps = {
-            type: 'black',
-            onClick: self.handleBackClick
-        };
-        var nextButtonProps = {
-            type: 'black',
-            onClick: self.handleNextClick
-        };
-        if( this.state.postPage <= 1 ){
-            prevButtonProps.disabled = true;
-        }
         if( !this.props.visible ){ return null; }
         return <div>
             {this.state.visiblePosts.map(function(post){
@@ -129,8 +114,6 @@ var UserPosts = React.createClass({
                     post={post}
                     handleVote={self.handleVote} />;
             })}
-            <button{ ...prevButtonProps }>Prev</button>
-            <button{ ...nextButtonProps }>Next</button>
         </div>
     }
 });
