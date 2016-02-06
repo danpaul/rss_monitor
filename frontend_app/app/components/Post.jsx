@@ -36,7 +36,10 @@ var Post = React.createClass({
             pubDate = '[' + pubDate + ']';
         }
 
-        return <row>
+        return <row
+                className="post-wrap"
+                data-postid={this.props.post.id}
+                data-title={this.props.post.title}>
             <column cols="1" className="post-vote-wrap">
                 <div>
                     <a onClick={this.handleUpVote}>

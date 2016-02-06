@@ -230,7 +230,10 @@ var Post = React.createClass({displayName: "Post",
             pubDate = '[' + pubDate + ']';
         }
 
-        return React.createElement("row", null, 
+        return React.createElement("row", {
+                className: "post-wrap", 
+                "data-postid": this.props.post.id, 
+                "data-title": this.props.post.title}, 
             React.createElement("column", {cols: "1", className: "post-vote-wrap"}, 
                 React.createElement("div", null, 
                     React.createElement("a", {onClick: this.handleUpVote}, 
@@ -481,16 +484,21 @@ var _ = require('underscore');
 var $ = require('jquery');
 var Post = require('./Post.jsx');
 var React = require('react');
+var config = require('../config');
 
 var UserPosts = React.createClass({displayName: "UserPosts",
     readPosts: {},
     postQueue: [],
     page: 1,
     isLoading: false,
+    postsToLog: [],
+    logLastUpdated: null,
     settings: {
         minPostsInQueue: 40,
         postsPerPage: 20,
-        pageBottomeOffset: 100
+        pageBottomeOffset: 100,
+        scrollCheckTime: 1000, // frequency to check which posts the user has already viewed
+        updateLogTime: 10000 // frequency to update user viewed log on the server
     },
     getInitialState: function(){
         window.onscroll = this.handleScroll;    
@@ -525,6 +533,50 @@ var UserPosts = React.createClass({displayName: "UserPosts",
             self.addPostsToRead(resp.logs);
             self.loadPosts();
         });
+        this.logLastUpdated = Date.now();
+        setInterval(function(){
+            _.each($('.post-wrap'), function(postDiv){
+                var id = $(postDiv).data('postid');
+                if( self.postHasBeenScrolledPast(postDiv) &&
+                    !self.readPosts[id] ){
+                    self.addPostsToRead([id]);
+                    // self.readPosts[id] = true;
+                    self.postsToLog.push(id);
+                    if( config.debug ){
+                        console.log('Adding post to viewed log:',
+                                    $(postDiv).data('title'));
+                    }                    
+                }
+            })
+            self.postViewedLog();
+        }, this.settings.scrollCheckTime)
+    },
+    postViewedLog: function(){
+        // check time
+        if( Date.now() - this.logLastUpdated < this.settings.updateLogTime ){
+            return;
+        }
+        var postsToLog = this.postsToLog.slice();
+        this.postsToLog = [];
+        this.logLastUpdated = Date.now();
+
+        if( postsToLog.length === 0 ){
+            if( config.debug ){ console.log('No posts to log'); }
+            return;
+        }
+
+        if( config.debug ){
+            console.log('Logging posts: ', postsToLog);
+        }
+        this.props.services.addPostsToLog({posts: postsToLog},
+                                          function(resp){
+            if(resp.status !== 'success'){
+                console.log('Error saving postst to log:', resp);
+            }
+        })
+    },
+    postHasBeenScrolledPast: function(el){
+        return( $(el).position().top < $(document).scrollTop() );
     },
     // takes an array of post IDS or single ID
     addPostsToRead: function(postIds){
@@ -598,7 +650,7 @@ var UserPosts = React.createClass({displayName: "UserPosts",
 });
 module.exports = UserPosts;
 
-},{"./Post.jsx":6,"jquery":16,"react":173,"underscore":174}],12:[function(require,module,exports){
+},{"../config":13,"./Post.jsx":6,"jquery":16,"react":173,"underscore":174}],12:[function(require,module,exports){
 module.exports = {
     handleInputChange: function(e, callbackIn){
         var callback = callbackIn || function(){};
