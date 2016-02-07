@@ -33,6 +33,10 @@ module.exports = function(app){
     var feedMonitorInterval = app.settings.feedMonitorInterval;
     var intervals = {};
 
+    model.init = function(){
+        this.turnOnFeeds(function(err){ if( err ){ throw(err); } });
+    }
+
     model.activate = function(id, callback){
         this.get(id, function(err, feed){
             if( err ){ return callback(err); }

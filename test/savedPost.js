@@ -11,6 +11,16 @@ module.exports = function(app, callbackIn){
 
     async.series([
 
+        // delete all old posts
+        function(callback){
+            var postIds = TEST_POSTS_ARRAY.slice();
+            postIds.push(TEST_POST_ID);
+            models.savedPost.delete({
+                                        userId: TEST_USER_ID,
+                                        postIds: postIds    },
+                                     callback);
+        },
+
         // create a test post
         function(callback){
             models.savedPost.save({userId: TEST_USER_ID, postId: TEST_POST_ID},

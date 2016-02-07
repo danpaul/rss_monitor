@@ -24,8 +24,17 @@ module.exports = function(app){
     model.settings = {
         cacheTime: DEFAULT_CACHE_TIME,
         sliceSize: DEFAULT_SLICE_SIZE,
-        decayTime: 1000 * 60 * 60 * 24 * 30 // time for ranking to decay to zero
+        decayTime: 1000 * 60 * 60 * 24 * 30, // time for ranking to decay to zero
+        rankingUpdateInterval: 1000 * 60 * 60 // frequency of ranking update
     };
+
+    model.init = function(){
+        var self = this;
+        // setInterval(this.updateRankings, this.settings.rankingUpdateInterval);
+        setInterval(function(){
+            self.updateRankings();
+        }, this.settings.rankingUpdateInterval);
+    }
 
     /**
         required: feedData.guid, feedData.feedId
@@ -65,13 +74,14 @@ module.exports = function(app){
             } else {
                 // save item
                 self.create(feedData, function(err, newObject){
-                    if( err ){
-                        callback(err);
-                        return;
-                    }
+                    if( err ){ return callback(err); }
                     // update cache
                     cache.put(feedData.guid, true, model.settings.cacheTime);
-                    callback(null, newObject);
+                    self.vote({postId: newObject.id, upvote: true},
+                              function(err){
+                        if( err ){ return callback(err); }
+                        callback(null, newObject);
+                    });
                 });
             }
         });
@@ -174,5 +184,48 @@ module.exports = function(app){
         return wilsonScore(upvotes, downvotes) *
                ( 1 - (timeAgo / this.settings.decayTime) );
     }
+
+    model.updateRankings = function(options, callbackIn){
+        var self = this;
+        var callback = callbackIn ? callbackIn : function(){};
+        var hadError = false;
+        var lastError = null;
+        r.table(this.name).between(0,
+                                   r.maxval,
+                                   {leftBound: 'open', index: "ranking"})
+            .run(this.connection, function(err, cursor){
+                if( err ){ return callback(err); }
+                cursor.each(function(err, row) {
+                    if( err ){
+                        console.log(err);
+                        hadError = true;
+                        lastError = err;
+                        return;
+                    }
+                    self.updateRowRanking(row, function(err){
+                        if( err ){
+                            console.log(err);
+                            hadError = true;
+                            lastError = err;
+                        }
+                    });
+                }, function(){
+                    if( hadError ){
+                        callback(lastError);
+                    } else {
+                        callback();
+                    }
+                });
+            });
+    }
+
+    model.updateRowRanking = function(post, callback){
+        var updateObject = {id: post.id};
+        updateObject.ranking = this.calculateRanking(post.upvotes,
+                                                     post.downvotes,
+                                                     post.timestamp);
+        this.update(updateObject, callback);
+    }
+
     return model;
 }

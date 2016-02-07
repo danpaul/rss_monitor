@@ -86,8 +86,8 @@ r.connect(config.rethink, function(err, conn) {
 
         ***********************************************************************/
 
-        // activate feeds
-        app.models.feed.turnOnFeeds(function(err){ if( err ){ throw(err); } })
+        // init models
+        _.each(app.models, function(model){ if( model.init ){ model.init();} });
 
         var server = app.listen(config.port, function () {
 
