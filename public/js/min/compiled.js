@@ -663,11 +663,11 @@ module.exports = {
 },{}],13:[function(require,module,exports){
 var config = {};
 
-config.env = window.location.href.indexOf('localhost:3000') !== -1 ? 
-                                  'dev' : 'production';
+config.env = window.location.href.indexOf('localhost:3010') !== -1 ? 
+                                          'dev' : 'production';
 
 if( config.env === 'dev' ){
-    config.rootUrl = 'http://localhost:3000';
+    config.rootUrl = 'http://localhost:3010';
     config.debug = true;
 } else {
     config.rootUrl = '';

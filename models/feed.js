@@ -126,6 +126,10 @@ module.exports = function(app){
                 console.log(err);
                 return;
             }
+            if( app.config.debug ){
+// console.log(feedData.data);
+                console.log('Saving ' + feedData.data.title + ' to ' + feed.name);
+            }
             feedData.data.feedId = feed.id;
             models.post.save(feedData.data, feed, function(err){
                 if( err ){ debug('Error saving post', err); }
@@ -144,6 +148,9 @@ module.exports = function(app){
         var self = this;
         this.clearInterval(feed.id);
         intervals[feed.id] = setInterval(function(){
+            if( app.config.debug ){
+                console.log('Reading feed: ', feed.name);
+            }
             self.readFeed(feed);
         }, feedMonitorInterval)
     }

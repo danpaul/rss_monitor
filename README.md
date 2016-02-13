@@ -16,10 +16,8 @@ Prod: NODE_ENV=production SESSION_SECRET=... COOKIE_SECRET=... node index.js
 
 
 ## TODO
-* track posts that have scrolled out of view and mark as read
-* add initial upvote to new posts
-* set cron to automatically update posts ranking
-x * info to post: feed, date
+* front end style revision (p)
+    http://neat.bourbon.io/
 * add feed info
 * toggle to allow view/don't view alread read
 * add saved posts
