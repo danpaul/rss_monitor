@@ -24,7 +24,7 @@ var UserFeedTab = React.createClass({
                     onClick: self.handleButtonClick };
         });
         props[this.props.selected]['disabled'] = true;
-        return <div>
+        return <div className="menu-wrap">
             <button {...props['feeds']} data-value="feeds">Feeds</button>
             <button {...props['posts']} data-value="posts">Posts</button>
             <button {...props['logout']}

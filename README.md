@@ -18,6 +18,7 @@ Prod: NODE_ENV=production SESSION_SECRET=... COOKIE_SECRET=... node index.js
 ## TODO
 * front end style revision (p)
     http://neat.bourbon.io/
+* add find feed for site
 * add feed info
 * toggle to allow view/don't view alread read
 * add saved posts

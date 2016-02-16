@@ -467,7 +467,7 @@ var UserFeedTab = React.createClass({displayName: "UserFeedTab",
                     onClick: self.handleButtonClick };
         });
         props[this.props.selected]['disabled'] = true;
-        return React.createElement("div", null, 
+        return React.createElement("div", {className: "menu-wrap"}, 
             React.createElement("button", React.__spread({},  props['feeds'], {"data-value": "feeds"}), "Feeds"), 
             React.createElement("button", React.__spread({},  props['posts'], {"data-value": "posts"}), "Posts"), 
             React.createElement("button", React.__spread({},  props['logout'], 

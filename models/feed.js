@@ -6,6 +6,8 @@
 */
 var _ = require('underscore');
 var async = require('async');
+var loadRssLink = require('load-rss-link');
+
 var BaseModel = require('../lib/rethink_base_model');
 var debug = require('debug')('rss_monitor');
 var errors = require('../lib/errors');
@@ -68,6 +70,7 @@ module.exports = function(app){
     model.createIfNew = function(feedObject, callback){
         var self = this;
         feedObject.url = this._normalizeUrl(feedObject.url);
+        var invalidFeedError = { status: 'failure', message: 'URL is not valid' };
         this.filter({row: 'url', value: feedObject.url}, function(err, result){
             if( err ){ return callback(err); }
             if( result.length > 0 ){
@@ -75,23 +78,41 @@ module.exports = function(app){
             }
             // validate URL
             if( !validUrl.isUri(feedObject.url) ){
-                return(callback(null,
-                                {   status: 'failure',
-                                    message: 'URL is not valid' }));
+                return(callback(null, invalidFeedError));
             }
+
             // test URL
             self.feedIsValid(feedObject.url, function(err, isValid){
                 if( err ){ return callback(errors.server); }
-                if( !isValid ){ return callback(null, errors.invalidFeed); }
-
-                // create
-                self.create(feedObject, function(err, newFeed){
-                    if( err ){ return callback(err); }
-                    self.updateMeta(newFeed.id, function(err){
-                        if( err ){ return callback(err); }
-                        callback(null, {status: 'success', feed: newFeed});
+                if( !isValid ){
+                    loadRssLink({url: feedObject.url}, function(err, rssLink){
+                        if( err ){ return callback(errors.server); }
+                        if( rssLink === null ){
+                            return callback(null, invalidFeedError);
+                        }
+                        feedObject.url = rssLink;
+                        self.feedIsValid(feedObject.url, function(err, isValid){
+                            if( !isValid ){
+                                return callback(null, invalidFeedError);
+                            }
+                            self._create(feedObject, callback);
+                        });
                     });
-                });
+                } else {
+                    self._create(feedObject, callback);
+                }
+            });
+        });
+    }
+
+    model._create = function(feedObject, callback){
+        var self = this;
+
+        self.create(feedObject, function(err, newFeed){
+            if( err ){ return callback(err); }
+            self.updateMeta(newFeed.id, function(err){
+                if( err ){ return callback(err); }
+                callback(null, {status: 'success', feed: newFeed});
             });
         });
     }

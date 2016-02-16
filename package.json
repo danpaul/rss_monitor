@@ -21,6 +21,7 @@
     "express-session-rethinkdb": "^0.2.0",
     "feed-read": "0.0.1",
     "feedparser": "^1.1.4",
+    "load-rss-link": "^1.0.1",
     "memory-cache": "^0.1.4",
     "node-cache": "^3.0.0",
     "passport": "^0.3.2",
