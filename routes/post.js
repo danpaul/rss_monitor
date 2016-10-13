@@ -28,6 +28,7 @@ module.exports = function(app){
     });
 
     route.get('/count', function(req, res){
+        return res.send('not authorized');
         if( !req.query ||
             !req.query.token ||
             req.query.token !== '^7dBZW5YtPZ9m!G3hb1GgRk5d$QCKfm!'){
