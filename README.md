@@ -1,5 +1,5 @@
 ## ABOUT
-`rss_monitor` is a small service for monitoring rss feeds.
+`rss_monitor` is an appliction for tracking, viewing and ranking rss feeds
 
 ## TO SETUP
 Setup and start Rethink for your local system.
@@ -27,7 +27,7 @@ Prod: NODE_ENV=production SESSION_SECRET=... COOKIE_SECRET=... node index.js
 * Add settings page
   * hide already viewed
 * Add save functionality and saved view
-* Add routing
+* QA
 
 ## Back Burner TODO
 * Review query in models.post.getFromFeeds
@@ -40,7 +40,8 @@ use-getall-with-orderby-in-rethinkdb
 
 ## Features
 * Add commentary
-* Tags
+* Tags, socially curated tags
+* User groupings/suggestion engine
 * Determine feed ranking based on percentage of up/downvotes for feed (for users who are actually following that feed)
 
 ## NOTE

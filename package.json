@@ -24,6 +24,7 @@
     "load-rss-link": "^1.0.1",
     "memory-cache": "^0.1.4",
     "node-cache": "^3.0.0",
+    "node_express_user_manager": "^0.1.1",
     "passport": "^0.3.2",
     "passport-local": "^1.0.0",
     "request": "^2.67.0",
