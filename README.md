@@ -15,7 +15,6 @@ Front end dev: NODE_ENV=development RUN_TESTS=false gulp
 Prod: NODE_ENV=production SESSION_SECRET=... COOKIE_SECRET=... node index.js
 
 ## TODO
-* Ignore tag feature for now
 * Rework user auth to use sql_user_manager
   * keep existing user object in rethink DB but remove auth fields and generate ID
   * add hooks to sql_user_manager for registration, login, logout

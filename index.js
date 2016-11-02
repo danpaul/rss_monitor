@@ -5,7 +5,7 @@ var r = require('rethinkdb');
 var schemaBuilder = require('./lib/rethink_schema_builder');
 var tests = require('./test/index');
 
-var USE_SESSIONS = true;
+var RUN_TESTS = false;
 
 /*******************************************************************************
 
@@ -23,24 +23,25 @@ app.settings = require('./settings');
 var bodyParser = require('body-parser')
 
 app.use(express.static(__dirname + '/public'));
-
-if( USE_SESSIONS ){
-    var session = require('express-session')
-    app.use(require('cookie-parser')(config.cookieSecret));
-    var RDBStore = require('express-session-rethinkdb')(session);
-    var rDBStore = new RDBStore({ connectOptions: config.rethink });
-    app.use(session({
-        secret: config.sessionSecret,
-        // resave: true,
-        resave: false,
-        //  saveUninitialized: true,
-        saveUninitialized: false,
-        store: rDBStore
-    }));
-}
-
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
+
+var nodemailer = require('nodemailer');
+var smtpTransport = require('nodemailer-smtp-transport');
+var transporter = nodemailer.createTransport(smtpTransport(config.smtp));
+
+var options = {
+    rootUrl: config.rootUrl + '/auth', // should match the middleware root
+    rethinkConnectionOptions: config.rethink,
+    databaseName: config.rethink.db,
+    tableName: 'rss_monitor_auth',
+    transporter: transporter,
+    siteName: 'RSS Monitor',
+    sessionSecret: config.sessionSecret,
+    loginSuccessRedirect: config.rootUrl
+}
+var userManager = require('node_express_user_manager')(app, options);
+app.use('/auth', userManager);
 
 /*******************************************************************************
 
@@ -99,6 +100,7 @@ r.connect(config.rethink, function(err, conn) {
             *******************************************************************/
             if( typeof(process.env.RUN_TESTS) !== 'undefined' &&
                 process.env.RUN_TESTS === 'false' ){ return; }
+            if( !RUN_TESTS ){ return; }
             tests(app, function(err){
                 if( err ){
                     throw err;

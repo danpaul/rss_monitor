@@ -24,7 +24,7 @@ module.exports = function(app){
     route.get('/', function(req, res){
         var self = this;
         if( !auth.check(req, res) ){ return; }
-        models.user.getPublicUser(req.session.userId, function(err, resp){
+        models.user.getPublicUser(auth.getUserId(req), function(err, resp){
             if( err ){ return res.json(errors.server); }
             res.json(resp);
         })
@@ -41,21 +41,21 @@ module.exports = function(app){
         });
     });
 
-    route.post('/login', function(req, res){
-        var self = this;
-        models.user.login(getDefaultFields(req), function(err, resp){
-            if( err ){ return res.json(errors.server); }
-            if( resp.status === 'success' ){
-                auth.login(req, resp.user.id);
-            }
-            return res.json(resp);
-        });
-    });
+    // route.post('/login', function(req, res){
+    //     var self = this;
+    //     models.user.login(getDefaultFields(req), function(err, resp){
+    //         if( err ){ return res.json(errors.server); }
+    //         if( resp.status === 'success' ){
+    //             auth.login(req, resp.user.id);
+    //         }
+    //         return res.json(resp);
+    //     });
+    // });
 
-    route.post('/logout', function(req, res){
-        auth.logout(req);
-        res.json({status: 'success'});
-    });
+    // route.post('/logout', function(req, res){
+    //     auth.logout(req);
+    //     res.json({status: 'success'});
+    // });
 
     route.post('/follow/:feedId', function(req, res){
         if( !auth.check(req, res) ){ return; }

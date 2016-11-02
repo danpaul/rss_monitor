@@ -9,121 +9,33 @@ module.exports = function(app){
     var model = new BaseModel(this, app, __filename);
 
     // set model defaults
-    model.defaults  = { username: null,
-                        email: '',
-                        password: '',
+    model.defaults  = { userID: null,
                         feeds: [],
                         tags: {}    };
 
     // defines the rethink indexes
-    model.indexes = ['username', 'email'];
+    model.indexes = ['userId'];
 
-    model.publicFields = ['id', 'email', 'feeds', 'tags'];
+    model.publicFields = ['id', 'userID', 'feeds', 'tags'];
 
     var models = app.models;
 
-    model.validateNewUser = function(userObject, callback){
-        if( !userObject ||
-            // !userObject.username ||
-            !userObject.email ||
-            !userObject.password ){
-
-            callback(null, {status: 'failure', message: 'User is missing fields'});
-            return;
-        }
-
-        if( !this._emailIsValid(userObject.email) ){
-            callback(null, {status: 'failure', message: 'Email is invalid'});
-            return;
-        }
-
-        // check if user already exists DB
+    model.get = function(userId, callback){
         r.table(this.name)
-            .filter(
-                r.row('email').eq(userObject.email)
-                // r.row('username').eq(userObject.username)
-                // .or(r.row('email')).eq(userObject.email)
-            )            
-            .run(this.connection, function(err, cursor){
-                if( err ){
-                    callback(err);
-                    return;
-                }
-                cursor.toArray(function(err, results){
-                    if( err ){ callback(err); }
-                    else{
-                        if( results.length > 0){
-                            callback(null,
-                                     { status: 'failure',
-                                       message: 'User with email already exists'});
-                        } else {
-                            callback(null, { status: 'success' });
-                        }
-                    }
-                });
-            });
+            .getAll(userId, {index: 'userId'})
+            .coerceTo('array')
+            .run(this.connection, function(err, response){
+                if( err ){ return callback(err); }
+                if( response ){ return callback(null, response[0]); }
+        });
     }
 
     model.createNew = function(userObject, callback){
         var self = this;
-        this.validateNewUser(userObject, function(err, resp){
-            if( err ){
-                callback(err);
-                return;
-            }
-            if( resp.status !== 'success' ){
-                callback(null, resp);
-                return;
-            }
-            password.encryptPassword(userObject.password,
-                                     function(err, hashedPassword){
-                if( err ){ return callback(err); }
-                userObject.password = hashedPassword;
-                self.create(userObject, function(err, newUser){
-                    if( err ){ return callback(err); }
-                    callback(null, {status: 'success',
-                                    user: self.getPublic(newUser)});
-                });
-            });
-        });
-    }
-
-    /**
-        Required:
-            options.email
-            options.password
-            options.req
-    */
-    model.login = function(options, callback){
-        var self = this;
-        var failure = {status: 'failure',
-                       message: 'Email or password is not correct'};
-        this.getByEmail(options, function(err, user){
+        this.create(userObject, function(err, newUser){
             if( err ){ return callback(err); }
-            if( user === null ){ return callback(null, failure); }
-            password.comparePasswords(options.password,
-                                      user.password,
-                                      function(err, isMatch){
-                    if( err ){ return callback(err); }
-                    if( !isMatch ){ return callback(null, failure) }
-                    return callback(null,
-                                    {   status: 'success',
-                                        user: self.getPublic(user)  });
-            });
-        })
-    }
-
-    /**
-        Required:
-            options.email
-    */
-    model.getByEmail = function(options, callback){
-        this.filter({row: 'email', value: options.email}, function(err, rows){
-            if( err ){ return callback(err); }
-            if( rows.length !== 1 ){
-                return callback(null, null);
-            }
-            return callback(null, rows[0]);
+            callback(null, {status: 'success',
+                            user: self.getPublic(newUser)});
         });
     }
 
@@ -132,8 +44,12 @@ module.exports = function(app){
         this.get(userId, function(err, user){
             if( err ){ return callback(err); }
             if( !user ){
-                return callback(null,
-                                {status: 'failure', message: 'No user found'});
+                // create it
+                this.create({userId: userId}, function(err, newUser){
+                    if( err ){ return callback(err); }
+                    callback(null, {status: 'success',
+                                    user: self.getPublic(newUser)});
+                });
             }
             callback(null, {status: 'success', user: self.getPublic(user)});
         });
@@ -224,6 +140,7 @@ module.exports = function(app){
     */
     model.removeFeed = function(options, callback){
         var self = this;
+// asdf
         this.get(options.userId, function(err, user){
             if( err ){
                 callback(err);
