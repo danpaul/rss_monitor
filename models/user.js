@@ -9,14 +9,14 @@ module.exports = function(app){
     var model = new BaseModel(this, app, __filename);
 
     // set model defaults
-    model.defaults  = { userID: null,
+    model.defaults  = { userId: null,
                         feeds: [],
                         tags: {}    };
 
     // defines the rethink indexes
     model.indexes = ['userId'];
 
-    model.publicFields = ['id', 'userID', 'feeds', 'tags'];
+    model.publicFields = ['id', 'userId', 'feeds', 'tags'];
 
     var models = app.models;
 
@@ -42,16 +42,21 @@ module.exports = function(app){
     model.getPublicUser = function(userId, callback){
         var self = this;
         this.get(userId, function(err, user){
-            if( err ){ return callback(err); }
+            if( err ){
+                return callback(err);
+            }
             if( !user ){
                 // create it
-                this.create({userId: userId}, function(err, newUser){
+                self.createNew({userId: userId}, function(err, resp){
                     if( err ){ return callback(err); }
-                    callback(null, {status: 'success',
-                                    user: self.getPublic(newUser)});
+                    if( resp.status === 'success' ){
+                        resp.user = self.getPublic(resp.user);
+                    }
+                    return callback(null, resp);
                 });
+            } else {
+                callback(null, {status: 'success', user: self.getPublic(user)});
             }
-            callback(null, {status: 'success', user: self.getPublic(user)});
         });
     }
 
@@ -140,7 +145,6 @@ module.exports = function(app){
     */
     model.removeFeed = function(options, callback){
         var self = this;
-// asdf
         this.get(options.userId, function(err, user){
             if( err ){
                 callback(err);
